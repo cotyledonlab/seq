@@ -1,0 +1,27 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export default NoteSelect;};  );    </select>      <option value="B4">B4</option>      <option value="A4">A4</option>      <option value="G4">G4</option>      <option value="F4">F4</option>      <option value="E4">E4</option>      <option value="D4">D4</option>      <option value="C4">C4</option>    >      onChange={onChange}      value={value}      data-testid="note-select"    <select  return (const NoteSelect: React.FC<NoteSelectProps> = ({ value, onChange }) => {}  onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;  value: string;interface NoteSelectProps {import React from 'react';

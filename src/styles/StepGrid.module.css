@@ -1,0 +1,42 @@
+.gridContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 1.5rem;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.stepButton {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.5rem;
+  transition: all 200ms ease-in-out;
+}
+
+.stepButton:hover {
+  transform: scale(1.05);
+}
+
+.inactive {
+  background-color: #e5e7eb;
+}
+
+.inactive:hover {
+  background-color: #d1d5db;
+}
+
+.active {
+  background: linear-gradient(to bottom right, #3b82f6, #2563eb);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.active:hover {
+  background: linear-gradient(to bottom right, #2563eb, #1d4ed8);
+}
+
+.current {
+  outline: 4px solid #fbbf24;
+  outline-offset: 2px;
+}
