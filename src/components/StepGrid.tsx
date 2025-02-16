@@ -18,7 +18,7 @@ export const StepGrid: React.FC<StepGridProps> = ({ steps, currentStep, onStepTo
             ${active ? styles.active : styles.inactive}
             ${currentStep === index ? styles.current : ''}`}
           onClick={() => onStepToggle(index)}
-          data-testid="step"
+          data-testid={`sequencer-step-${index}`}
         />
       ))}
     </div>

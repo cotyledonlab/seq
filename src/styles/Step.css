@@ -1,0 +1,27 @@
+.sequencer-step {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #2a2a2a;
+  border: 2px solid #3a3a3a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sequencer-step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-color: #4a4a4a;
+}
+
+.sequencer-step.active {
+  background: #4CAF50;
+  border-color: #5DBE60;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
+}
+
+.sequencer-step.active:hover {
+  background: #5DBE60;
+  border-color: #6ECE71;
+}

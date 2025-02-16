@@ -9,6 +9,19 @@
 
   <body>
     <div id="root"></div>
+    <button id="start-audio">Start Audio</button>
     <script type="module" src="/src/main.tsx"></script>
+    <script type="module">
+        import { AudioContextManager } from './audio-context.js';
+
+        document.getElementById('start-audio').addEventListener('click', async () => {
+            try {
+                await AudioContextManager.initialize();
+                // Now it's safe to use audio features
+            } catch (error) {
+                console.error('Failed to initialize audio:', error);
+            }
+        });
+    </script>
   </body>
 </html>

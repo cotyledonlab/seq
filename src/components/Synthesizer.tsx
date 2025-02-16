@@ -27,104 +27,81 @@ export const Synthesizer: React.FC<SynthesizerProps> = ({ synth }) => {
   }, [oscType, attack, decay, sustain, release, synth]);
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg space-y-4">
-      <h2 className="text-xl font-bold text-white mb-4">Synthesizer</h2>
-      
-      <div className="space-y-2">
-        <label className="block text-white">
-          Oscillator Type
-          <select
-            value={oscType}
-            onChange={(e) => setOscType(e.target.value as OscillatorType)}
-            className="w-full bg-gray-700 text-white p-2 rounded"
-          >
-            <option value="sine">Sine</option>
-            <option value="square">Square</option>
-            <option value="triangle">Triangle</option>
-            <option value="sawtooth">Sawtooth</option>
-          </select>
-        </label>
+    <div className="synth-container">
+      <div className="synth-grid" />
+      <div className="relative z-10">
+        <h2 className="neon-text text-3xl text-transparent bg-clip-text bg-gradient-to-r 
+                      from-cyan-400 to-purple-500 mb-8 animate-pulse">
+          SYNTHESIZER
+        </h2>
+        
+        <div className="space-y-8">
+          <div className="relative group">
+            <select
+              value={oscType}
+              onChange={(e) => setOscType(e.target.value as OscillatorType)}
+              className="w-full bg-black/80 text-cyan-400 p-4 rounded-lg 
+                       border-2 border-cyan-500/50 
+                       appearance-none cursor-pointer transition-all duration-300
+                       focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(6,182,212,0.5)]
+                       hover:border-cyan-400 backdrop-blur-sm"
+            >
+              {["sine", "square", "triangle", "sawtooth"].map(type => (
+                <option key={type} value={type} className="bg-gray-900">
+                  {type.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-cyan-400">▼</div>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <label className="block text-white">
-            Attack
-            <input
-              type="range"
-              min="0"
-              max="2"
-              step="0.01"
-              value={attack}
-              onChange={(e) => setAttack(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
+          <div className="grid grid-cols-2 gap-8">
+            {[
+              { label: "ATTACK", value: attack, setValue: setAttack, max: 2 },
+              { label: "DECAY", value: decay, setValue: setDecay, max: 2 },
+              { label: "SUSTAIN", value: sustain, setValue: setSustain, max: 1 },
+              { label: "RELEASE", value: release, setValue: setRelease, max: 2 }
+            ].map(({ label, value, setValue, max }) => (
+              <div key={label} className="group space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-cyan-500 tracking-widest neon-text">{label}</span>
+                  <span className="text-xs font-mono text-purple-400">{value.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={max}
+                  step="0.01"
+                  value={value}
+                  onChange={(e) => setValue(Number(e.target.value))}
+                  className="synth-slider w-full"
+                />
+              </div>
+            ))}
+          </div>
 
-          <label className="block text-white">
-            Decay
-            <input
-              type="range"
-              min="0"
-              max="2"
-              step="0.01"
-              value={decay}
-              onChange={(e) => setDecay(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
-
-          <label className="block text-white">
-            Sustain
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={sustain}
-              onChange={(e) => setSustain(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
-
-          <label className="block text-white">
-            Release
-            <input
-              type="range"
-              min="0"
-              max="2"
-              step="0.01"
-              value={release}
-              onChange={(e) => setRelease(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-white">
-            Filter Frequency
-            <input
-              type="range"
-              min="20"
-              max="20000"
-              step="1"
-              value={filterFreq}
-              onChange={(e) => setFilterFreq(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
-
-          <label className="block text-white">
-            Filter Q
-            <input
-              type="range"
-              min="0"
-              max="10"
-              step="0.1"
-              value={filterQ}
-              onChange={(e) => setFilterQ(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
+          <div className="space-y-6 border-t-2 border-cyan-500/20 pt-6">
+            {[
+              { label: "FILTER FREQ", value: filterFreq, setValue: setFilterFreq, min: 20, max: 20000, step: 1, unit: "Hz" },
+              { label: "FILTER Q", value: filterQ, setValue: setFilterQ, min: 0, max: 10, step: 0.1, unit: "" }
+            ].map(({ label, value, setValue, min, max, step, unit }) => (
+              <div key={label} className="group space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-cyan-500 tracking-widest neon-text">{label}</span>
+                  <span className="text-xs font-mono text-purple-400">{value.toFixed(1)}{unit}</span>
+                </div>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  step={step}
+                  value={value}
+                  onChange={(e) => setValue(Number(e.target.value))}
+                  className="synth-slider w-full"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

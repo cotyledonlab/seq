@@ -71,9 +71,9 @@ export const App: React.FC = () => {
   }, [isPlaying, steps, currentStep]);
 
   return (
-    <div className="container mx-auto p-4 min-h-screen bg-gray-900">
-      <h1 className="text-2xl font-bold mb-4 text-white">MIDI Sequencer</h1>
-      <div className="space-y-4">
+    <div className="app-container">
+      <h1>MIDI Sequencer</h1>
+      <div className="controls-container">
         <MidiDeviceSelector onDeviceSelect={handleMidiDeviceSelect} />
         <TransportControls
           isPlaying={isPlaying}
