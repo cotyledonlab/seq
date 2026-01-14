@@ -10,6 +10,7 @@ This repo currently ships a multi-track step sequencer with a built-in lead synt
 - Pattern length selection (8/16/32/64) with step resizing.
 - Per-step editor for velocity, probability, microtiming, ratchet, note, and length.
 - Ratchet playback for stuttered step repeats.
+- Project controls with autosave, manual snapshots, and JSON import/export.
 - Transport controls (play/stop) and tempo input.
 - Dedicated instruments per track plus a lead synth editor.
 - Web MIDI device selection and MIDI note-on input playback.
@@ -123,7 +124,8 @@ npm run dev
 5. Click on the step buttons to create your patterns per track
 6. Select a step to edit velocity, probability, microtiming, and ratchet
 7. Mute tracks as needed
-8. Adjust tempo as needed
+8. Rename, save, or export your project from the Project panel
+9. Adjust tempo as needed
 
 ## Tech Stack
 

@@ -119,3 +119,50 @@ export const deserializeProject = (payload: string): Project | null => {
     return null;
   }
 };
+
+const coercePatternLength = (value: number | undefined): PatternLength =>
+  PATTERN_LENGTHS.includes(value as PatternLength) ? (value as PatternLength) : 16;
+
+export const normalizeStep = (step: Partial<Step>): Step => ({
+  ...createStep(),
+  ...step,
+  velocity: step.velocity ?? 0.9,
+  probability: step.probability ?? 1,
+  microtiming: step.microtiming ?? 0,
+  ratchet: step.ratchet ?? 1,
+  length: step.length ?? '16n',
+  tie: step.tie ?? false,
+});
+
+export const normalizeTrack = (
+  track: Track,
+  patternLength: PatternLength
+): Track => ({
+  id: track.id,
+  name: track.name || 'Untitled',
+  type: track.type || 'lead',
+  device: track.device ?? null,
+  steps: resizeSteps(
+    (track.steps || []).map((step) => normalizeStep(step)),
+    patternLength
+  ),
+  fx: track.fx || [],
+  muted: track.muted ?? false,
+  defaultNote: track.defaultNote || 'C4',
+});
+
+export const normalizeProject = (project: Project): Project => {
+  const patternLength = coercePatternLength(project.patternLength);
+
+  return {
+    id: project.id || `project-${Math.random().toString(36).slice(2, 10)}`,
+    name: project.name || 'Untitled Project',
+    bpm: project.bpm || 120,
+    timeSignature: project.timeSignature || [4, 4],
+    patternLength,
+    tracks: (project.tracks || []).map((track) =>
+      normalizeTrack(track, patternLength)
+    ),
+    scenes: project.scenes || [],
+  };
+};

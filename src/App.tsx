@@ -5,6 +5,7 @@ import { TransportControls } from './components/TransportControls';
 import { MidiDeviceSelector } from './components/MidiDeviceSelector';
 import { Synthesizer } from './components/Synthesizer';
 import { StepEditor } from './components/StepEditor';
+import { ProjectControls } from './components/ProjectControls';
 import {
   createDefaultProject,
   resizeSteps,
@@ -12,6 +13,14 @@ import {
   type Track,
 } from './models/sequence';
 import { useSequencerEngine } from './hooks/useSequencerEngine';
+import {
+  listStoredProjects,
+  loadProjectById,
+  loadProjectStore,
+  saveProjectToStore,
+  type StoredProjectSummary,
+  importProjectPayload,
+} from './storage/projects';
 
 export const App: React.FC = () => {
   const [project, setProject] = useState(() => createDefaultProject());
@@ -22,6 +31,10 @@ export const App: React.FC = () => {
     project.tracks[0]?.id ?? null
   );
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(0);
+  const [savedProjects, setSavedProjects] = useState<StoredProjectSummary[]>([]);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [autosaveState, setAutosaveState] = useState<'idle' | 'saving'>('idle');
+  const [isHydrated, setIsHydrated] = useState(false);
   const leadSynthRef = useRef<Tone.Synth | null>(null);
   const bassSynthRef = useRef<Tone.MonoSynth | null>(null);
   const drumSynthRef = useRef<Tone.MembraneSynth | null>(null);
@@ -56,6 +69,10 @@ export const App: React.FC = () => {
     setProject((prev) => ({ ...prev, bpm: tempo }));
   };
 
+  const handleProjectNameChange = (name: string) => {
+    setProject((prev) => ({ ...prev, name }));
+  };
+
   const handlePatternLengthChange = (length: PatternLength) => {
     setProject((prev) => ({
       ...prev,
@@ -85,6 +102,44 @@ export const App: React.FC = () => {
 
   const handleMidiDeviceSelect = (deviceId: string) => {
     setMidiDeviceId(deviceId);
+  };
+
+  const handleNewProject = () => {
+    setProject(createDefaultProject());
+    setSelectedStepIndex(0);
+  };
+
+  const handleSaveNow = () => {
+    saveProjectToStore(project);
+    setSavedProjects(listStoredProjects());
+    setLastSavedAt(new Date());
+    setAutosaveState('idle');
+  };
+
+  const handleLoadProject = (projectId: string) => {
+    const loaded = loadProjectById(projectId);
+    if (loaded) {
+      setProject(loaded);
+    }
+  };
+
+  const handleExportProject = () => {
+    const payload = JSON.stringify(project, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${project.name || 'seq-project'}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportProject = async (file: File) => {
+    const text = await file.text();
+    const loaded = importProjectPayload(text);
+    if (loaded) {
+      setProject(loaded);
+    }
   };
 
   const handleStepSelect = (trackId: string, stepIndex: number) => {
@@ -189,6 +244,39 @@ export const App: React.FC = () => {
   });
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const store = loadProjectStore();
+    if (store?.lastOpenedId) {
+      const loaded = loadProjectById(store.lastOpenedId);
+      if (loaded) {
+        setProject(loaded);
+      }
+    }
+    setSavedProjects(listStoredProjects());
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    setAutosaveState('saving');
+    const handle = window.setTimeout(() => {
+      saveProjectToStore(project);
+      setSavedProjects(listStoredProjects());
+      setLastSavedAt(new Date());
+      setAutosaveState('idle');
+    }, 700);
+
+    return () => {
+      window.clearTimeout(handle);
+    };
+  }, [project, isHydrated]);
+
+  useEffect(() => {
     setSelectedTrackId((prev) => {
       if (prev && project.tracks.some((track) => track.id === prev)) {
         return prev;
@@ -208,6 +296,12 @@ export const App: React.FC = () => {
 
   const selectedTrack =
     project.tracks.find((track) => track.id === selectedTrackId) ?? null;
+
+  const autosaveLabel = lastSavedAt
+    ? `${autosaveState === 'saving' ? 'Saving' : 'Autosaved'} • ${lastSavedAt.toLocaleTimeString()}`
+    : autosaveState === 'saving'
+      ? 'Saving…'
+      : 'Not saved yet';
 
   return (
     <div className="app-shell">
@@ -240,6 +334,17 @@ export const App: React.FC = () => {
 
       <section className="app-main">
         <div className="stack">
+          <ProjectControls
+            projectName={project.name}
+            autosaveLabel={autosaveLabel}
+            savedProjects={savedProjects}
+            onProjectNameChange={handleProjectNameChange}
+            onNewProject={handleNewProject}
+            onSaveNow={handleSaveNow}
+            onLoadProject={handleLoadProject}
+            onExportProject={handleExportProject}
+            onImportProject={handleImportProject}
+          />
           <Synthesizer 
             synth={leadSynthRef.current}
             receiveMidiInput={!!midiDeviceId}

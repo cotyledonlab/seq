@@ -194,6 +194,61 @@ p {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
+.project-controls {
+  min-width: min(360px, 100%);
+}
+
+.project-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 16px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action-button {
+  border: none;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: var(--panel-2);
+  color: var(--text-light);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.action-button.primary {
+  background: var(--accent-1);
+  color: #1a1a1a;
+  box-shadow: 0 10px 20px rgba(255, 122, 0, 0.2);
+}
+
+.action-button.ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.file-input {
+  display: none;
+}
+
 .control {
   display: flex;
   flex-direction: column;

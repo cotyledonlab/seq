@@ -13,9 +13,11 @@ SEQ is a browser-based MIDI step sequencer. The current implementation now suppo
 - `src/models/sequence.ts`: project/track/step data model + helpers.
 - `src/components/StepGrid.tsx`: multi-track step grid UI.
 - `src/components/StepEditor.tsx`: per-step parameter inspector.
+- `src/components/ProjectControls.tsx`: project name, autosave, import/export UI.
 - `src/components/TransportControls.tsx`: play/stop + tempo input.
 - `src/components/MidiDeviceSelector.tsx`: Web MIDI input list.
 - `src/components/Synthesizer.tsx`: basic synth controls.
+- `src/storage/projects.ts`: localStorage persistence helpers for projects.
 - `src/styles/*`: Tailwind + custom styling.
 - `src-tauri/`: optional desktop packaging.
 
@@ -25,6 +27,7 @@ SEQ is a browser-based MIDI step sequencer. The current implementation now suppo
 - `useSequencerEngine` drives transport scheduling with refs, while UI updates render the current step highlight.
 - Multi-track grid renders per-track steps and mute toggles; pattern length control resizes steps.
 - Step editor updates per-step velocity, probability, microtiming, ratchet, note, and length.
+- Project controls provide autosave, save snapshot, load, and JSON import/export.
 - MIDI device selection attaches a `onmidimessage` handler for note-on events (lead synth).
 
 ## Commands
@@ -40,12 +43,12 @@ SEQ is a browser-based MIDI step sequencer. The current implementation now suppo
 
 - Audio scheduling still relies on Tone.Loop timing, but UI rendering is separated from the scheduling path.
 - Current synth is monophonic with limited controls.
-- No persistent storage of patterns or presets.
+- Local project persistence exists, but no preset libraries yet.
 - MIDI device hot-swap handling is not implemented.
 
 ## Recommended next focus
 
-- Expand per-step parameters (velocity, probability, microtiming) into the UI.
+- Add scene view + pattern chaining.
 - Add export pathways (MIDI, audio renders).
 
 ## Approach (current buildout)
