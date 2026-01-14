@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test:watch": "jest --watch --maxWorkers=50%",
-    "test": "jest --coverage --maxWorkers=50%",
+    "test": "jest --maxWorkers=50%",
     "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },

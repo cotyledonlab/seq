@@ -26,7 +26,8 @@ describe('MidiDeviceSelector', () => {
       render(<MidiDeviceSelector onDeviceSelect={onDeviceSelect} />);
     });
     
-    expect(screen.getByText('Select MIDI Device')).toBeInTheDocument();
+    expect(screen.getByText('Select device')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enable MIDI' })).toBeInTheDocument();
   });
 
   it('calls onDeviceSelect when device is selected', async () => {
@@ -35,7 +36,11 @@ describe('MidiDeviceSelector', () => {
     await act(async () => {
       render(<MidiDeviceSelector onDeviceSelect={onDeviceSelect} />);
     });
-    
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Enable MIDI' }));
+    });
+
     const select = screen.getByRole('combobox');
     
     await act(async () => {

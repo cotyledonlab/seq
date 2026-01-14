@@ -8,6 +8,9 @@ interface StepGridProps {
   patternLength: number;
   onStepToggle: (trackId: string, step: number) => void;
   onTrackMuteToggle: (trackId: string) => void;
+  selectedTrackId: string | null;
+  selectedStepIndex: number | null;
+  onStepSelect: (trackId: string, step: number) => void;
 }
 
 export const StepGrid: React.FC<StepGridProps> = ({
@@ -16,6 +19,9 @@ export const StepGrid: React.FC<StepGridProps> = ({
   patternLength,
   onStepToggle,
   onTrackMuteToggle,
+  selectedTrackId,
+  selectedStepIndex,
+  onStepSelect,
 }) => {
   return (
     <div className={styles.gridContainer}>
@@ -43,7 +49,11 @@ export const StepGrid: React.FC<StepGridProps> = ({
       {tracks.map((track) => (
         <div
           key={track.id}
-          className={`${styles.trackRow} ${track.muted ? styles.mutedRow : ''}`}
+          className={`${styles.trackRow} ${
+            track.muted ? styles.mutedRow : ''
+          } ${
+            selectedTrackId === track.id ? styles.selectedRow : ''
+          }`}
           data-testid={`track-row-${track.id}`}
         >
           <div className={styles.trackLabel}>
@@ -70,8 +80,16 @@ export const StepGrid: React.FC<StepGridProps> = ({
                   title={`${track.name} Step ${index + 1}`}
                   className={`${styles.stepButton} 
                     ${step.active ? styles.active : styles.inactive}
-                    ${currentStep === index ? styles.current : ''}`}
-                  onClick={() => onStepToggle(track.id, index)}
+                    ${currentStep === index ? styles.current : ''}
+                    ${
+                      selectedTrackId === track.id && selectedStepIndex === index
+                        ? styles.selected
+                        : ''
+                    }`}
+                  onClick={() => {
+                    onStepSelect(track.id, index);
+                    onStepToggle(track.id, index);
+                  }}
                   data-testid={`sequencer-step-${track.id}-${index}`}
                   aria-pressed={step.active}
                 />

@@ -19,41 +19,47 @@ export const TransportControls: React.FC<TransportControlsProps> = ({
   onPatternLengthChange,
 }) => {
   return (
-    <div className="flex items-center gap-4 p-4">
+    <div className="panel transport">
       <button
-        className={`px-4 py-2 rounded ${isPlaying ? 'bg-red-500' : 'bg-green-500'}`}
+        className={`transport-button ${isPlaying ? 'is-playing' : ''}`}
         onClick={onPlayToggle}
+        type="button"
       >
         {isPlaying ? 'Stop' : 'Play'}
       </button>
-      <div className="flex items-center gap-2">
-        <input
-          type="number"
-          min="60"
-          max="200"
-          value={tempo}
-          onChange={(e) => onTempoChange(Number(e.target.value))}
-          className="w-20 p-2 border rounded"
-          title="Tempo"
-          placeholder="Enter tempo"
-        />
-        <span>BPM</span>
+      <div className="transport-fields">
+        <label className="control">
+          <span>Tempo</span>
+          <div className="inline-field">
+            <input
+              type="number"
+              min="60"
+              max="200"
+              value={tempo}
+              onChange={(e) => onTempoChange(Number(e.target.value))}
+              title="Tempo"
+              placeholder="Enter tempo"
+            />
+            <strong>BPM</strong>
+          </div>
+        </label>
+        <label className="control">
+          <span>Steps</span>
+          <select
+            value={patternLength}
+            onChange={(e) =>
+              onPatternLengthChange(Number(e.target.value) as PatternLength)
+            }
+            aria-label="Pattern length"
+          >
+            {PATTERN_LENGTHS.map((length) => (
+              <option key={length} value={length}>
+                {length}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-      <label className="flex items-center gap-2">
-        <span>Steps</span>
-        <select
-          value={patternLength}
-          onChange={(e) => onPatternLengthChange(Number(e.target.value) as PatternLength)}
-          className="p-2 border rounded"
-          aria-label="Pattern length"
-        >
-          {PATTERN_LENGTHS.map((length) => (
-            <option key={length} value={length}>
-              {length}
-            </option>
-          ))}
-        </select>
-      </label>
     </div>
   );
 };

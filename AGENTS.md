@@ -12,6 +12,7 @@ SEQ is a browser-based MIDI step sequencer. The current implementation now suppo
 - `src/hooks/useSequencerEngine.ts`: transport scheduling using refs for stable playback.
 - `src/models/sequence.ts`: project/track/step data model + helpers.
 - `src/components/StepGrid.tsx`: multi-track step grid UI.
+- `src/components/StepEditor.tsx`: per-step parameter inspector.
 - `src/components/TransportControls.tsx`: play/stop + tempo input.
 - `src/components/MidiDeviceSelector.tsx`: Web MIDI input list.
 - `src/components/Synthesizer.tsx`: basic synth controls.
@@ -23,6 +24,7 @@ SEQ is a browser-based MIDI step sequencer. The current implementation now suppo
 - App holds a `project` model with tracks, pattern length, and tempo alongside `currentStep` + `isPlaying`.
 - `useSequencerEngine` drives transport scheduling with refs, while UI updates render the current step highlight.
 - Multi-track grid renders per-track steps and mute toggles; pattern length control resizes steps.
+- Step editor updates per-step velocity, probability, microtiming, ratchet, note, and length.
 - MIDI device selection attaches a `onmidimessage` handler for note-on events (lead synth).
 
 ## Commands

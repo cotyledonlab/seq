@@ -83,8 +83,15 @@ export const useSequencerEngine = ({
         const duration = step.length || '16n';
         const velocity = Math.min(Math.max(step.velocity, 0), 1);
         const scheduledTime = time + (step.microtiming || 0);
+        const ratchetCount = Math.max(1, Math.round(step.ratchet || 1));
+        const durationSeconds = Tone.Time(duration).toSeconds();
+        const sliceSeconds =
+          ratchetCount > 1 ? durationSeconds / ratchetCount : durationSeconds;
 
-        instrument.triggerAttackRelease(note, duration, scheduledTime, velocity);
+        for (let i = 0; i < ratchetCount; i += 1) {
+          const offsetTime = scheduledTime + i * sliceSeconds;
+          instrument.triggerAttackRelease(note, sliceSeconds, offsetTime, velocity);
+        }
       });
 
       onStepRef.current(stepIndex);

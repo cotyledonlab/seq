@@ -1,5 +1,6 @@
 export type PatternLength = 8 | 16 | 32 | 64;
 export type TrackType = 'drum' | 'bass' | 'lead';
+export type StepLength = '32n' | '16n' | '8n' | '4n';
 
 export interface Step {
   active: boolean;
@@ -8,7 +9,7 @@ export interface Step {
   microtiming: number;
   ratchet: number;
   note?: string;
-  length: string;
+  length: StepLength;
   tie: boolean;
 }
 
@@ -40,6 +41,8 @@ export interface Project {
 }
 
 export const PATTERN_LENGTHS: PatternLength[] = [8, 16, 32, 64];
+export const STEP_LENGTHS: StepLength[] = ['32n', '16n', '8n', '4n'];
+export const RATCHET_OPTIONS = [1, 2, 3, 4];
 
 const createId = (prefix: string) =>
   `${prefix}-${Math.random().toString(36).slice(2, 10)}`;

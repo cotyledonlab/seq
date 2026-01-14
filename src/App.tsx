@@ -4,6 +4,7 @@ import { StepGrid } from './components/StepGrid';
 import { TransportControls } from './components/TransportControls';
 import { MidiDeviceSelector } from './components/MidiDeviceSelector';
 import { Synthesizer } from './components/Synthesizer';
+import { StepEditor } from './components/StepEditor';
 import {
   createDefaultProject,
   resizeSteps,
@@ -17,9 +18,13 @@ export const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [midiDeviceId, setMidiDeviceId] = useState<string>('');
-  const leadSynthRef = useRef(new Tone.Synth().toDestination());
-  const bassSynthRef = useRef(new Tone.MonoSynth().toDestination());
-  const drumSynthRef = useRef(new Tone.MembraneSynth().toDestination());
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
+    project.tracks[0]?.id ?? null
+  );
+  const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(0);
+  const leadSynthRef = useRef<Tone.Synth | null>(null);
+  const bassSynthRef = useRef<Tone.MonoSynth | null>(null);
+  const drumSynthRef = useRef<Tone.MembraneSynth | null>(null);
 
   const toggleStep = (trackId: string, stepIndex: number) => {
     setProject((prev) => ({
@@ -61,15 +66,54 @@ export const App: React.FC = () => {
       })),
     }));
     setCurrentStep(0);
+    setSelectedStepIndex(0);
   };
 
   const togglePlay = async () => {
     await Tone.start();
+    if (!leadSynthRef.current) {
+      leadSynthRef.current = new Tone.Synth().toDestination();
+    }
+    if (!bassSynthRef.current) {
+      bassSynthRef.current = new Tone.MonoSynth().toDestination();
+    }
+    if (!drumSynthRef.current) {
+      drumSynthRef.current = new Tone.MembraneSynth().toDestination();
+    }
     setIsPlaying((prev) => !prev);
   };
 
   const handleMidiDeviceSelect = (deviceId: string) => {
     setMidiDeviceId(deviceId);
+  };
+
+  const handleStepSelect = (trackId: string, stepIndex: number) => {
+    setSelectedTrackId(trackId);
+    setSelectedStepIndex(stepIndex);
+  };
+
+  const handleStepChange = (
+    trackId: string,
+    stepIndex: number,
+    updates: Partial<Track['steps'][number]>
+  ) => {
+    setProject((prev) => ({
+      ...prev,
+      tracks: prev.tracks.map((track) => {
+        if (track.id !== trackId) {
+          return track;
+        }
+
+        const steps = [...track.steps];
+        const existing = steps[stepIndex];
+        if (!existing) {
+          return track;
+        }
+        steps[stepIndex] = { ...existing, ...updates };
+
+        return { ...track, steps };
+      }),
+    }));
   };
 
   useEffect(() => {
@@ -94,6 +138,9 @@ export const App: React.FC = () => {
         device.onmidimessage = (message) => {
           const [status, note, velocity] = message.data || [];
           if (status === 0x90 && velocity > 0) {
+            if (!leadSynthRef.current) {
+              return;
+            }
             leadSynthRef.current.triggerAttackRelease(
               Tone.Frequency(note, 'midi').toString(),
               '8n',
@@ -141,10 +188,45 @@ export const App: React.FC = () => {
     getInstrument,
   });
 
+  useEffect(() => {
+    setSelectedTrackId((prev) => {
+      if (prev && project.tracks.some((track) => track.id === prev)) {
+        return prev;
+      }
+      return project.tracks[0]?.id ?? null;
+    });
+  }, [project.tracks]);
+
+  useEffect(() => {
+    if (
+      selectedStepIndex !== null &&
+      selectedStepIndex >= project.patternLength
+    ) {
+      setSelectedStepIndex(0);
+    }
+  }, [project.patternLength, selectedStepIndex]);
+
+  const selectedTrack =
+    project.tracks.find((track) => track.id === selectedTrackId) ?? null;
+
   return (
-    <div className="app-container">
-      <h1>SEQ Groovebox</h1>
-      <div className="controls-container">
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Browser groovebox</p>
+          <h1>SEQ Groovebox</h1>
+          <p className="tagline">
+            Sculpt drum, bass, and lead patterns with per-step feel controls.
+          </p>
+        </div>
+        <div className="status-pill">
+          <span>{project.patternLength} steps</span>
+          <span className="dot" />
+          <span>{project.bpm} bpm</span>
+        </div>
+      </header>
+
+      <section className="control-bar">
         <MidiDeviceSelector onDeviceSelect={handleMidiDeviceSelect} />
         <TransportControls
           isPlaying={isPlaying}
@@ -154,18 +236,33 @@ export const App: React.FC = () => {
           patternLength={project.patternLength}
           onPatternLengthChange={handlePatternLengthChange}
         />
-        <Synthesizer 
-          synth={leadSynthRef.current}
-          receiveMidiInput={!!midiDeviceId}
-        />
-        <StepGrid
-          tracks={project.tracks}
-          currentStep={currentStep}
-          patternLength={project.patternLength}
-          onStepToggle={toggleStep}
-          onTrackMuteToggle={toggleTrackMute}
-        />
-      </div>
+      </section>
+
+      <section className="app-main">
+        <div className="stack">
+          <Synthesizer 
+            synth={leadSynthRef.current}
+            receiveMidiInput={!!midiDeviceId}
+          />
+          <StepEditor
+            track={selectedTrack}
+            stepIndex={selectedStepIndex}
+            onStepChange={handleStepChange}
+          />
+        </div>
+        <div className="grid-panel">
+          <StepGrid
+            tracks={project.tracks}
+            currentStep={currentStep}
+            patternLength={project.patternLength}
+            onStepToggle={toggleStep}
+            onTrackMuteToggle={toggleTrackMute}
+            selectedTrackId={selectedTrackId}
+            selectedStepIndex={selectedStepIndex}
+            onStepSelect={handleStepSelect}
+          />
+        </div>
+      </section>
     </div>
   );
 };

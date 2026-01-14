@@ -25,6 +25,12 @@
 - Scene view: chain patterns into a live set.
 - Single-click play/stop with clear transport and sync status.
 
+### Step Editing UX (Near-term)
+
+- Step selection highlights the active lane + column.
+- Step Inspector panel exposes per-step velocity, probability, microtiming, ratchet, note, and length.
+- Edits are instant and audible with the transport running.
+
 ## Functional Requirements
 
 ### Sequencing
@@ -34,6 +40,7 @@
 - Swing percentage and groove templates.
 - Pattern chaining and clips per track.
 - Undo/redo for edit history.
+- Step inspector editing for per-step parameters (velocity, probability, microtiming, ratchet, note).
 
 ### Sound Engine
 
@@ -72,6 +79,7 @@
 - Central transport clock with lookahead scheduling (audio thread safe).
 - Consider AudioWorklet-based scheduler for lower jitter.
 - Track events precomputed per bar to reduce render load.
+- Ratchet playback should subdivide step duration without dropping velocity or microtiming offsets.
 
 ### State Management
 

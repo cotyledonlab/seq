@@ -28,6 +28,9 @@ describe('StepGrid', () => {
         patternLength={8}
         onStepToggle={jest.fn()}
         onTrackMuteToggle={jest.fn()}
+        selectedTrackId={null}
+        selectedStepIndex={null}
+        onStepSelect={jest.fn()}
       />
     );
 
@@ -39,6 +42,7 @@ describe('StepGrid', () => {
   it('calls handlers when steps and mute toggles are clicked', () => {
     const onStepToggle = jest.fn();
     const onTrackMuteToggle = jest.fn();
+    const onStepSelect = jest.fn();
     const tracks = [buildTrack({ id: 'track-1', name: 'Drums' })];
 
     render(
@@ -48,6 +52,9 @@ describe('StepGrid', () => {
         patternLength={8}
         onStepToggle={onStepToggle}
         onTrackMuteToggle={onTrackMuteToggle}
+        selectedTrackId={null}
+        selectedStepIndex={null}
+        onStepSelect={onStepSelect}
       />
     );
 
@@ -55,6 +62,7 @@ describe('StepGrid', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mute' }));
 
     expect(onStepToggle).toHaveBeenCalledWith('track-1', 0);
+    expect(onStepSelect).toHaveBeenCalledWith('track-1', 0);
     expect(onTrackMuteToggle).toHaveBeenCalledWith('track-1');
   });
 });
