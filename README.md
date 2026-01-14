@@ -1,15 +1,17 @@
-# SEQ - Browser-based MIDI Sequencer
+# SEQ - Browser-based Multi-Track MIDI Sequencer
 
-A modern, browser-based MIDI sequencer built with React, Tone.js, and Web MIDI API.
+A modern, browser-based multi-track MIDI sequencer built with React, Tone.js, and Web MIDI API.
 
-This repo currently ships a minimal, single-track 16-step sequencer with a built-in Tone synth. The long-term vision is a production-ready, musician-grade sequencing environment that runs in the browser (and optionally as a desktop app via Tauri) with reliable MIDI I/O, low-latency audio, rich pattern editing, and export workflows that match how modern producers and live performers actually work.
+This repo currently ships a multi-track step sequencer with a built-in lead synth, drum/bass voices, per-track mute, and variable pattern lengths. The long-term vision is a production-ready, musician-grade sequencing environment that runs in the browser (and optionally as a desktop app via Tauri) with reliable MIDI I/O, low-latency audio, rich pattern editing, and export workflows that match how modern producers and live performers actually work.
 
 ## Current State (What Exists Today)
 
-- Single-track 16-step grid with per-step on/off state.
+- Multi-track step grid (drum, bass, lead) with per-track mute.
+- Pattern length selection (8/16/32/64) with step resizing.
 - Transport controls (play/stop) and tempo input.
-- One Tone.js synth with basic envelope + oscillator selection.
+- Dedicated instruments per track plus a lead synth editor.
 - Web MIDI device selection and MIDI note-on input playback.
+- Transport scheduling separated from UI state updates for steadier timing.
 - React + TypeScript UI, Tailwind-based styling.
 
 ## Productionized End-State Vision
@@ -35,7 +37,7 @@ SEQ should meet these trends with a compact, modern sequencing experience that d
 
 ### Sequencing
 
-- Multi-track step sequencing (drum, melodic, and bass tracks).
+- Expand multi-track sequencing beyond the current 3-track setup.
 - Variable step lengths (8/16/32/64) and time signatures.
 - Per-step parameters: velocity, probability, ratchets, microtiming, tie/slide.
 - Pattern chaining and scene arrangement for live sets.
@@ -115,8 +117,10 @@ npm run dev
 1. Press Play to initialize the audio context
 2. Select a MIDI input device (optional)
 3. Use the transport controls to start/stop the sequence
-4. Click on the step buttons to create your pattern
-5. Adjust tempo as needed
+4. Choose your pattern length (8/16/32/64)
+5. Click on the step buttons to create your patterns per track
+6. Mute tracks as needed
+7. Adjust tempo as needed
 
 ## Tech Stack
 

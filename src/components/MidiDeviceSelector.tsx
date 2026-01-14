@@ -38,9 +38,7 @@ export const MidiDeviceSelector: React.FC<MidiDeviceSelectorProps> = ({ onDevice
   };
 
   useEffect(() => {
-    if (selectedDevice) {
-      onDeviceSelect(selectedDevice);
-    }
+    onDeviceSelect(selectedDevice);
   }, [selectedDevice, onDeviceSelect]);
 
   return (

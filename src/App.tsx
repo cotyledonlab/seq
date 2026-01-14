@@ -1,94 +1,169 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
 import { StepGrid } from './components/StepGrid';
 import { TransportControls } from './components/TransportControls';
 import { MidiDeviceSelector } from './components/MidiDeviceSelector';
 import { Synthesizer } from './components/Synthesizer';
+import {
+  createDefaultProject,
+  resizeSteps,
+  type PatternLength,
+  type Track,
+} from './models/sequence';
+import { useSequencerEngine } from './hooks/useSequencerEngine';
 
 export const App: React.FC = () => {
-  const [steps, setSteps] = useState<boolean[]>(new Array(16).fill(false));
+  const [project, setProject] = useState(() => createDefaultProject());
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [tempo, setTempo] = useState(120);
   const [midiDeviceId, setMidiDeviceId] = useState<string>('');
-  const synthRef = useRef(new Tone.Synth().toDestination());
+  const leadSynthRef = useRef(new Tone.Synth().toDestination());
+  const bassSynthRef = useRef(new Tone.MonoSynth().toDestination());
+  const drumSynthRef = useRef(new Tone.MembraneSynth().toDestination());
 
-  useEffect(() => {
-    Tone.Transport.bpm.value = tempo;
-  }, [tempo]);
+  const toggleStep = (trackId: string, stepIndex: number) => {
+    setProject((prev) => ({
+      ...prev,
+      tracks: prev.tracks.map((track) => {
+        if (track.id !== trackId) {
+          return track;
+        }
 
-  const toggleStep = (step: number) => {
-    const newSteps = [...steps];
-    newSteps[step] = !newSteps[step];
-    setSteps(newSteps);
+        const steps = [...track.steps];
+        const existing = steps[stepIndex];
+        steps[stepIndex] = { ...existing, active: !existing.active };
+
+        return { ...track, steps };
+      }),
+    }));
+  };
+
+  const toggleTrackMute = (trackId: string) => {
+    setProject((prev) => ({
+      ...prev,
+      tracks: prev.tracks.map((track) =>
+        track.id === trackId ? { ...track, muted: !track.muted } : track
+      ),
+    }));
+  };
+
+  const handleTempoChange = (tempo: number) => {
+    setProject((prev) => ({ ...prev, bpm: tempo }));
+  };
+
+  const handlePatternLengthChange = (length: PatternLength) => {
+    setProject((prev) => ({
+      ...prev,
+      patternLength: length,
+      tracks: prev.tracks.map((track) => ({
+        ...track,
+        steps: resizeSteps(track.steps, length),
+      })),
+    }));
+    setCurrentStep(0);
   };
 
   const togglePlay = async () => {
     await Tone.start();
-    if (isPlaying) {
-      Tone.Transport.stop();
-      setCurrentStep(0);
-    } else {
-      Tone.Transport.start();
-    }
-    setIsPlaying(!isPlaying);
+    setIsPlaying((prev) => !prev);
   };
 
   const handleMidiDeviceSelect = (deviceId: string) => {
     setMidiDeviceId(deviceId);
-    if (deviceId) {
-      navigator.requestMIDIAccess().then(access => {
-        const device = access.inputs.get(deviceId);
-        if (device) {
-          device.onmidimessage = (message) => {
-            if (message.data && message.data[0] === 0x90) { // Note On
-              synthRef.current.triggerAttackRelease(
-                Tone.Frequency(message.data[1], "midi").toString(), 
-                "8n"
-              );
-            }
-          };
-        }
-      });
-    }
   };
 
   useEffect(() => {
-    const loop = new Tone.Loop((time) => {
-      setCurrentStep((prev) => (prev + 1) % 16);
-      if (steps[currentStep]) {
-        synthRef.current.triggerAttackRelease('C4', '8n', time);
-      }
-    }, '16n');
+    let activeInput: MIDIInput | null = null;
+    let cancelled = false;
 
-    if (isPlaying) {
-      loop.start(0);
-    }
+    const attachMidi = async () => {
+      if (!midiDeviceId) {
+        return;
+      }
+
+      try {
+        const access = await navigator.requestMIDIAccess();
+        if (cancelled) {
+          return;
+        }
+        const device = access.inputs.get(midiDeviceId);
+        if (!device) {
+          return;
+        }
+        activeInput = device;
+        device.onmidimessage = (message) => {
+          const [status, note, velocity] = message.data || [];
+          if (status === 0x90 && velocity > 0) {
+            leadSynthRef.current.triggerAttackRelease(
+              Tone.Frequency(note, 'midi').toString(),
+              '8n',
+              undefined,
+              velocity / 127
+            );
+          }
+        };
+      } catch (error) {
+        console.error('MIDI access failed:', error);
+      }
+    };
+
+    attachMidi();
 
     return () => {
-      loop.dispose();
+      cancelled = true;
+      if (activeInput) {
+        activeInput.onmidimessage = null;
+      }
     };
-  }, [isPlaying, steps, currentStep]);
+  }, [midiDeviceId]);
+
+  const getInstrument = useCallback(
+    (track: Track) => {
+      switch (track.type) {
+        case 'drum':
+          return drumSynthRef.current;
+        case 'bass':
+          return bassSynthRef.current;
+        case 'lead':
+        default:
+          return leadSynthRef.current;
+      }
+    },
+    []
+  );
+
+  useSequencerEngine({
+    tracks: project.tracks,
+    patternLength: project.patternLength,
+    tempo: project.bpm,
+    isPlaying,
+    onStep: setCurrentStep,
+    getInstrument,
+  });
 
   return (
     <div className="app-container">
-      <h1>MIDI Sequencer</h1>
+      <h1>SEQ Groovebox</h1>
       <div className="controls-container">
         <MidiDeviceSelector onDeviceSelect={handleMidiDeviceSelect} />
         <TransportControls
           isPlaying={isPlaying}
           onPlayToggle={togglePlay}
-          tempo={tempo}
-          onTempoChange={setTempo}
+          tempo={project.bpm}
+          onTempoChange={handleTempoChange}
+          patternLength={project.patternLength}
+          onPatternLengthChange={handlePatternLengthChange}
         />
         <Synthesizer 
-          synth={synthRef.current}
+          synth={leadSynthRef.current}
           receiveMidiInput={!!midiDeviceId}
         />
         <StepGrid
-          steps={steps}
+          tracks={project.tracks}
           currentStep={currentStep}
+          patternLength={project.patternLength}
           onStepToggle={toggleStep}
+          onTrackMuteToggle={toggleTrackMute}
         />
       </div>
     </div>

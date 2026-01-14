@@ -8,7 +8,7 @@ interface SynthesizerProps {
 
 type OscillatorType = "sine" | "square" | "triangle" | "sawtooth";
 
-export const Synthesizer: React.FC<SynthesizerProps> = ({ synth }) => {
+export const Synthesizer: React.FC<SynthesizerProps> = ({ synth, receiveMidiInput }) => {
   const [oscType, setOscType] = useState<OscillatorType>("sine");
   const [attack, setAttack] = useState(0.1);
   const [decay, setDecay] = useState(0.2);
@@ -30,10 +30,15 @@ export const Synthesizer: React.FC<SynthesizerProps> = ({ synth }) => {
     <div className="synth-container">
       <div className="synth-grid" />
       <div className="relative z-10">
-        <h2 className="neon-text text-3xl text-transparent bg-clip-text bg-gradient-to-r 
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="neon-text text-3xl text-transparent bg-clip-text bg-gradient-to-r 
                       from-cyan-400 to-purple-500 mb-8 animate-pulse">
-          SYNTHESIZER
-        </h2>
+            SYNTHESIZER
+          </h2>
+          <span className="text-xs uppercase tracking-[0.4em] text-cyan-400">
+            Midi {receiveMidiInput ? 'on' : 'off'}
+          </span>
+        </div>
         
         <div className="space-y-8">
           <div className="relative group">
