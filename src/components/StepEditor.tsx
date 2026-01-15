@@ -9,13 +9,17 @@ import {
 interface StepEditorProps {
   track: Track | null;
   stepIndex: number | null;
+  patternLength: number;
   onStepChange: (trackId: string, stepIndex: number, updates: Partial<Step>) => void;
+  onStepSelect?: (trackId: string, stepIndex: number) => void;
 }
 
 export const StepEditor: React.FC<StepEditorProps> = ({
   track,
   stepIndex,
+  patternLength,
   onStepChange,
+  onStepSelect,
 }) => {
   if (!track || stepIndex === null) {
     return (
@@ -41,6 +45,19 @@ export const StepEditor: React.FC<StepEditorProps> = ({
   }
 
   const microtimingMs = Math.round(step.microtiming * 1000);
+  const maxSteps = Math.min(patternLength, track.steps.length);
+
+  const handleStepToggle = () => {
+    onStepChange(track.id, stepIndex, { active: !step.active });
+  };
+
+  const handleNavigate = (delta: number) => {
+    if (!onStepSelect || maxSteps === 0) {
+      return;
+    }
+    const nextIndex = (stepIndex + delta + maxSteps) % maxSteps;
+    onStepSelect(track.id, nextIndex);
+  };
 
   return (
     <div className="panel">
@@ -51,7 +68,39 @@ export const StepEditor: React.FC<StepEditorProps> = ({
             {track.name} · Step {stepIndex + 1} · {step.active ? 'On' : 'Off'}
           </span>
         </div>
-        <span className="panel-chip">{track.type.toUpperCase()}</span>
+        <div className="panel-actions">
+          <span className="panel-chip">{track.type.toUpperCase()}</span>
+          {onStepSelect ? (
+            <div className="button-row">
+              <button
+                type="button"
+                className="action-button ghost"
+                onClick={() => handleNavigate(-1)}
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                className="action-button ghost"
+                onClick={() => handleNavigate(1)}
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="button-row">
+        <button
+          type="button"
+          className={`action-button ${step.active ? 'primary' : 'ghost'}`}
+          aria-label="Toggle step"
+          aria-pressed={step.active}
+          onClick={handleStepToggle}
+        >
+          {step.active ? 'Step On' : 'Step Off'}
+        </button>
       </div>
 
       <div className="panel-grid">

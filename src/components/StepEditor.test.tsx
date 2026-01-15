@@ -18,10 +18,17 @@ const buildTrack = (overrides: Partial<Track>): Track => ({
 describe('StepEditor', () => {
   it('updates velocity and note fields', () => {
     const onStepChange = jest.fn();
+    const onStepSelect = jest.fn();
     const track = buildTrack({});
 
     render(
-      <StepEditor track={track} stepIndex={0} onStepChange={onStepChange} />
+      <StepEditor
+        track={track}
+        stepIndex={0}
+        patternLength={8}
+        onStepChange={onStepChange}
+        onStepSelect={onStepSelect}
+      />
     );
 
     fireEvent.change(screen.getByLabelText('Velocity'), {
@@ -37,5 +44,25 @@ describe('StepEditor', () => {
     expect(onStepChange).toHaveBeenCalledWith('track-1', 0, {
       note: 'D4',
     });
+  });
+
+  it('navigates steps with next button', () => {
+    const onStepChange = jest.fn();
+    const onStepSelect = jest.fn();
+    const track = buildTrack({});
+
+    render(
+      <StepEditor
+        track={track}
+        stepIndex={0}
+        patternLength={8}
+        onStepChange={onStepChange}
+        onStepSelect={onStepSelect}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(onStepSelect).toHaveBeenCalledWith('track-1', 1);
   });
 });

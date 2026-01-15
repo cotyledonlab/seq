@@ -577,7 +577,9 @@ export const App: React.FC = () => {
           <StepEditor
             track={selectedTrack}
             stepIndex={selectedStepIndex}
+            patternLength={project.patternLength}
             onStepChange={handleStepChange}
+            onStepSelect={handleStepSelect}
           />
         </div>
         <div className="grid-panel">

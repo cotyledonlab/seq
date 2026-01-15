@@ -155,6 +155,14 @@ p {
   color: var(--text-light);
 }
 
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .panel-subtitle {
   display: block;
   font-size: 0.7rem;
