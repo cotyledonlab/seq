@@ -10,18 +10,22 @@ interface StepEditorProps {
   track: Track | null;
   stepIndex: number | null;
   patternLength: number;
+  followPlayhead: boolean;
   onStepChange: (trackId: string, stepIndex: number, updates: Partial<Step>) => void;
   onStepSelect?: (trackId: string, stepIndex: number) => void;
   onStepPreview?: (trackId: string, stepIndex: number) => void;
+  onFollowPlayheadChange: (nextValue: boolean) => void;
 }
 
 export const StepEditor: React.FC<StepEditorProps> = ({
   track,
   stepIndex,
   patternLength,
+  followPlayhead,
   onStepChange,
   onStepSelect,
   onStepPreview,
+  onFollowPlayheadChange,
 }) => {
   if (!track || stepIndex === null) {
     return (
@@ -72,6 +76,14 @@ export const StepEditor: React.FC<StepEditorProps> = ({
         </div>
         <div className="panel-actions">
           <span className="panel-chip">{track.type.toUpperCase()}</span>
+          <button
+            type="button"
+            className={`action-button ${followPlayhead ? 'primary' : 'ghost'}`}
+            aria-pressed={followPlayhead}
+            onClick={() => onFollowPlayheadChange(!followPlayhead)}
+          >
+            Follow
+          </button>
           {onStepSelect ? (
             <div className="button-row">
               <button

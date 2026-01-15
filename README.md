@@ -9,7 +9,7 @@ This repo currently ships a multi-track step sequencer with an instrument rack, 
 - Multi-track step grid (drum, bass, lead) with per-track mute.
 - Pattern length selection (8/16/32/64) with step resizing.
 - Per-step editor for velocity, probability, microtiming, ratchet, note, and length.
-- Step editor navigation with step preview.
+- Step editor navigation with step preview and follow-playhead mode.
 - Ratchet playback for stuttered step repeats.
 - Project controls with autosave, manual snapshots, and JSON import/export.
 - Transport controls (play/stop) and tempo input.

@@ -96,6 +96,7 @@ export const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
+  const [followPlayhead, setFollowPlayhead] = useState(true);
   const [midiDeviceId, setMidiDeviceId] = useState<string>('');
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     project.tracks[0]?.id ?? null
@@ -499,6 +500,13 @@ export const App: React.FC = () => {
   });
 
   useEffect(() => {
+    if (!isPlaying || !followPlayhead || !selectedTrackId) {
+      return;
+    }
+    setSelectedStepIndex((prev) => (prev === currentStep ? prev : currentStep));
+  }, [currentStep, followPlayhead, isPlaying, selectedTrackId]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
@@ -622,9 +630,11 @@ export const App: React.FC = () => {
             track={selectedTrack}
             stepIndex={selectedStepIndex}
             patternLength={project.patternLength}
+            followPlayhead={followPlayhead}
             onStepChange={handleStepChange}
             onStepSelect={handleStepSelect}
             onStepPreview={handleStepPreview}
+            onFollowPlayheadChange={setFollowPlayhead}
           />
         </div>
         <div className="grid-panel">

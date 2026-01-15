@@ -20,6 +20,7 @@ describe('StepEditor', () => {
     const onStepChange = jest.fn();
     const onStepSelect = jest.fn();
     const onStepPreview = jest.fn();
+    const onFollowPlayheadChange = jest.fn();
     const track = buildTrack({});
 
     render(
@@ -27,9 +28,11 @@ describe('StepEditor', () => {
         track={track}
         stepIndex={0}
         patternLength={8}
+        followPlayhead={false}
         onStepChange={onStepChange}
         onStepSelect={onStepSelect}
         onStepPreview={onStepPreview}
+        onFollowPlayheadChange={onFollowPlayheadChange}
       />
     );
 
@@ -51,6 +54,7 @@ describe('StepEditor', () => {
   it('navigates steps with next button', () => {
     const onStepChange = jest.fn();
     const onStepSelect = jest.fn();
+    const onFollowPlayheadChange = jest.fn();
     const track = buildTrack({});
 
     render(
@@ -58,8 +62,10 @@ describe('StepEditor', () => {
         track={track}
         stepIndex={0}
         patternLength={8}
+        followPlayhead={false}
         onStepChange={onStepChange}
         onStepSelect={onStepSelect}
+        onFollowPlayheadChange={onFollowPlayheadChange}
       />
     );
 
@@ -71,6 +77,7 @@ describe('StepEditor', () => {
   it('fires preview action', () => {
     const onStepChange = jest.fn();
     const onStepPreview = jest.fn();
+    const onFollowPlayheadChange = jest.fn();
     const track = buildTrack({});
 
     render(
@@ -78,13 +85,36 @@ describe('StepEditor', () => {
         track={track}
         stepIndex={0}
         patternLength={8}
+        followPlayhead={false}
         onStepChange={onStepChange}
         onStepPreview={onStepPreview}
+        onFollowPlayheadChange={onFollowPlayheadChange}
       />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
 
     expect(onStepPreview).toHaveBeenCalledWith('track-1', 0);
+  });
+
+  it('toggles follow playhead', () => {
+    const onStepChange = jest.fn();
+    const onFollowPlayheadChange = jest.fn();
+    const track = buildTrack({});
+
+    render(
+      <StepEditor
+        track={track}
+        stepIndex={0}
+        patternLength={8}
+        followPlayhead={true}
+        onStepChange={onStepChange}
+        onFollowPlayheadChange={onFollowPlayheadChange}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Follow' }));
+
+    expect(onFollowPlayheadChange).toHaveBeenCalledWith(false);
   });
 });
