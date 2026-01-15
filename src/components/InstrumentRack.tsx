@@ -88,7 +88,7 @@ export const InstrumentRack: React.FC<InstrumentRackProps> = ({
               key={instrument.id}
               className={`rack-item ${
                 selectedInstrumentId === instrument.id ? 'is-selected' : ''
-              }`}
+              } ${isExpanded ? 'is-expanded' : ''}`}
             >
             <div className="rack-info">
               <label className="control rack-control">

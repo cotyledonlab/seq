@@ -53,6 +53,7 @@ p {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  position: relative;
 }
 
 .app-header {
@@ -70,6 +71,20 @@ p {
   gap: 12px;
   align-items: center;
   justify-content: flex-end;
+}
+
+.project-drawer {
+  position: fixed;
+  top: 110px;
+  right: 24px;
+  width: min(420px, calc(100vw - 48px));
+  z-index: 20;
+  animation: fadeUp 0.25s ease both;
+}
+
+.project-drawer .project-controls {
+  max-height: min(70vh, 520px);
+  overflow: auto;
 }
 
 .app-header h1 {
@@ -377,22 +392,32 @@ p {
 }
 
 .rack-mixer {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  animation: rackReveal 0.25s ease both;
 }
 
 .rack-mixer-row {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .rack-mixer-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.rack-mixer .control {
+  font-size: 0.78rem;
+}
+
+.rack-mixer .control span {
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
 }
 
 .instrument-rack .rack-list {
@@ -405,7 +430,7 @@ p {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px;
+  padding: 12px;
   border-radius: 14px;
   background: rgba(20, 30, 46, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -440,6 +465,7 @@ p {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .rack-footer {
@@ -448,46 +474,6 @@ p {
   flex-wrap: wrap;
   gap: 12px;
   align-items: flex-end;
-}
-
-.mixer-panel .mixer-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-}
-
-.mixer-channel {
-  background: rgba(20, 30, 46, 0.8);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 220px;
-}
-
-.mixer-channel.is-selected {
-  border-color: rgba(26, 183, 166, 0.6);
-  box-shadow: 0 16px 32px rgba(26, 183, 166, 0.2);
-}
-
-.channel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.channel-controls {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-}
-
-.channel-actions {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .action-button.is-active {
@@ -511,6 +497,17 @@ p {
   }
 }
 
+@keyframes rackReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 1200px) {
   .app-main {
     grid-template-columns: minmax(240px, 1fr) minmax(0, 1fr);
@@ -518,6 +515,11 @@ p {
 
   .grid-panel {
     grid-column: 1 / -1;
+  }
+
+  .project-drawer {
+    right: 16px;
+    width: min(480px, calc(100vw - 32px));
   }
 }
 
@@ -528,6 +530,13 @@ p {
 
   .grid-panel {
     grid-column: auto;
+  }
+
+  .project-drawer {
+    top: 90px;
+    right: 16px;
+    left: 16px;
+    width: auto;
   }
 
   .status-pill {

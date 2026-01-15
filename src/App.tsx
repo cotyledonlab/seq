@@ -625,11 +625,34 @@ export const App: React.FC = () => {
             type="button"
             className={`action-button ${showProjectPanel ? 'primary' : 'ghost'}`}
             onClick={() => setShowProjectPanel((prev) => !prev)}
+            aria-expanded={showProjectPanel}
+            aria-controls="project-panel"
           >
             Project
           </button>
         </div>
       </header>
+
+      {showProjectPanel ? (
+        <div
+          className="project-drawer"
+          id="project-panel"
+          role="dialog"
+          aria-label="Project menu"
+        >
+          <ProjectControls
+            projectName={project.name}
+            autosaveLabel={autosaveLabel}
+            savedProjects={savedProjects}
+            onProjectNameChange={handleProjectNameChange}
+            onNewProject={handleNewProject}
+            onSaveNow={handleSaveNow}
+            onLoadProject={handleLoadProject}
+            onExportProject={handleExportProject}
+            onImportProject={handleImportProject}
+          />
+        </div>
+      ) : null}
 
       <section className="control-bar">
         <MidiDeviceSelector onDeviceSelect={handleMidiDeviceSelect} />
@@ -645,19 +668,6 @@ export const App: React.FC = () => {
 
       <section className="app-main">
         <div className="stack">
-          {showProjectPanel ? (
-            <ProjectControls
-              projectName={project.name}
-              autosaveLabel={autosaveLabel}
-              savedProjects={savedProjects}
-              onProjectNameChange={handleProjectNameChange}
-              onNewProject={handleNewProject}
-              onSaveNow={handleSaveNow}
-              onLoadProject={handleLoadProject}
-              onExportProject={handleExportProject}
-              onImportProject={handleImportProject}
-            />
-          ) : null}
           <InstrumentRack
             instruments={project.instruments}
             selectedInstrumentId={selectedInstrumentId}
