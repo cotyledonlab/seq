@@ -12,6 +12,7 @@ interface StepEditorProps {
   patternLength: number;
   onStepChange: (trackId: string, stepIndex: number, updates: Partial<Step>) => void;
   onStepSelect?: (trackId: string, stepIndex: number) => void;
+  onStepPreview?: (trackId: string, stepIndex: number) => void;
 }
 
 export const StepEditor: React.FC<StepEditorProps> = ({
@@ -20,6 +21,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({
   patternLength,
   onStepChange,
   onStepSelect,
+  onStepPreview,
 }) => {
   if (!track || stepIndex === null) {
     return (
@@ -101,6 +103,15 @@ export const StepEditor: React.FC<StepEditorProps> = ({
         >
           {step.active ? 'Step On' : 'Step Off'}
         </button>
+        {onStepPreview ? (
+          <button
+            type="button"
+            className="action-button ghost"
+            onClick={() => onStepPreview(track.id, stepIndex)}
+          >
+            Preview
+          </button>
+        ) : null}
       </div>
 
       <div className="panel-grid">

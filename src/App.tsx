@@ -108,6 +108,7 @@ export const App: React.FC = () => {
   const instrumentNodesRef = useRef<Map<string, InstrumentNode>>(new Map());
   const projectRef = useRef(project);
   const selectedTrackRef = useRef(selectedTrackId);
+  const audioReadyRef = useRef(false);
 
   useEffect(() => {
     projectRef.current = project;
@@ -190,12 +191,18 @@ export const App: React.FC = () => {
     });
   }, []);
 
-  const togglePlay = async () => {
-    if (!isAudioReady) {
-      await Tone.start();
-      setIsAudioReady(true);
-      ensureInstrumentNodes(project.instruments);
+  const ensureAudioReady = useCallback(async () => {
+    if (audioReadyRef.current) {
+      return;
     }
+    await Tone.start();
+    audioReadyRef.current = true;
+    setIsAudioReady(true);
+    ensureInstrumentNodes(projectRef.current.instruments);
+  }, [ensureInstrumentNodes]);
+
+  const togglePlay = async () => {
+    await ensureAudioReady();
     setIsPlaying((prev) => !prev);
   };
 
@@ -357,6 +364,43 @@ export const App: React.FC = () => {
         return { ...track, steps };
       }),
     }));
+  };
+
+  const handleStepPreview = async (trackId: string, stepIndex: number) => {
+    await ensureAudioReady();
+    const activeProject = projectRef.current;
+    const track = activeProject.tracks.find((entry) => entry.id === trackId);
+    if (!track) {
+      return;
+    }
+    const instrument = activeProject.instruments.find(
+      (entry) => entry.id === track.instrumentId
+    );
+    if (!instrument || !instrument.enabled) {
+      return;
+    }
+    const nodes = instrumentNodesRef.current.get(instrument.id);
+    if (!nodes) {
+      return;
+    }
+    const step = track.steps[stepIndex];
+    if (!step) {
+      return;
+    }
+
+    const note = step.note ?? track.defaultNote;
+    const duration = step.length || '16n';
+    const velocity = Math.min(Math.max(step.velocity, 0), 1);
+    const scheduledTime = Tone.now() + (step.microtiming || 0);
+    const ratchetCount = Math.max(1, Math.round(step.ratchet || 1));
+    const durationSeconds = Tone.Time(duration).toSeconds();
+    const sliceSeconds =
+      ratchetCount > 1 ? durationSeconds / ratchetCount : durationSeconds;
+
+    for (let i = 0; i < ratchetCount; i += 1) {
+      const offsetTime = scheduledTime + i * sliceSeconds;
+      nodes.synth.triggerAttackRelease(note, sliceSeconds, offsetTime, velocity);
+    }
   };
 
   useEffect(() => {
@@ -580,6 +624,7 @@ export const App: React.FC = () => {
             patternLength={project.patternLength}
             onStepChange={handleStepChange}
             onStepSelect={handleStepSelect}
+            onStepPreview={handleStepPreview}
           />
         </div>
         <div className="grid-panel">

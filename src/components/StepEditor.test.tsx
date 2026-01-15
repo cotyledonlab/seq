@@ -19,6 +19,7 @@ describe('StepEditor', () => {
   it('updates velocity and note fields', () => {
     const onStepChange = jest.fn();
     const onStepSelect = jest.fn();
+    const onStepPreview = jest.fn();
     const track = buildTrack({});
 
     render(
@@ -28,6 +29,7 @@ describe('StepEditor', () => {
         patternLength={8}
         onStepChange={onStepChange}
         onStepSelect={onStepSelect}
+        onStepPreview={onStepPreview}
       />
     );
 
@@ -64,5 +66,25 @@ describe('StepEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(onStepSelect).toHaveBeenCalledWith('track-1', 1);
+  });
+
+  it('fires preview action', () => {
+    const onStepChange = jest.fn();
+    const onStepPreview = jest.fn();
+    const track = buildTrack({});
+
+    render(
+      <StepEditor
+        track={track}
+        stepIndex={0}
+        patternLength={8}
+        onStepChange={onStepChange}
+        onStepPreview={onStepPreview}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+
+    expect(onStepPreview).toHaveBeenCalledWith('track-1', 0);
   });
 });
