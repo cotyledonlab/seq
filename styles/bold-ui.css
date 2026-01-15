@@ -64,6 +64,14 @@ p {
   animation: fadeUp 0.6s ease both;
 }
 
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .app-header h1 {
   font-size: clamp(2.5rem, 4vw, 4rem);
   letter-spacing: -0.03em;
@@ -357,14 +365,34 @@ p {
 
 .app-main {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(220px, 320px) minmax(280px, 380px) minmax(0, 1fr);
   gap: 20px;
+  align-items: start;
 }
 
 .stack {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.rack-mixer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 12px;
+}
+
+.rack-mixer-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.rack-mixer-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .instrument-rack .rack-list {
@@ -483,9 +511,23 @@ p {
   }
 }
 
+@media (max-width: 1200px) {
+  .app-main {
+    grid-template-columns: minmax(240px, 1fr) minmax(0, 1fr);
+  }
+
+  .grid-panel {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 960px) {
   .app-main {
     grid-template-columns: 1fr;
+  }
+
+  .grid-panel {
+    grid-column: auto;
   }
 
   .status-pill {

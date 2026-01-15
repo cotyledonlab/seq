@@ -13,8 +13,7 @@ This repo currently ships a multi-track step sequencer with an instrument rack, 
 - Ratchet playback for stuttered step repeats.
 - Project controls with autosave, manual snapshots, and JSON import/export.
 - Transport controls (play/stop) and tempo input.
-- Instrument rack with add/remove and renaming of lanes.
-- Mixer panel with per-instrument volume, pan, oscillator, and envelope controls.
+- Instrument rack with add/remove, rename, and integrated mixer controls.
 - Web MIDI device selection and MIDI note-on input playback.
 - Transport scheduling separated from UI state updates for steadier timing.
 - React + TypeScript UI, Tailwind-based styling.
@@ -127,8 +126,8 @@ npm run dev
 6. Select a step to edit velocity, probability, microtiming, and ratchet
 7. Mute tracks as needed
 8. Add or remove instrument lanes from the Instrument Rack
-9. Balance levels and envelopes in the Mixer panel
-10. Rename, save, or export your project from the Project panel
+9. Open Mix for a lane and balance levels/envelopes
+10. Open the Project menu to rename, save, or export your project
 11. Adjust tempo as needed
 
 ## Tech Stack

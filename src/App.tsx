@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import * as Tone from 'tone';
+import type * as ToneType from 'tone';
 import { StepGrid } from './components/StepGrid';
 import { TransportControls } from './components/TransportControls';
 import { MidiDeviceSelector } from './components/MidiDeviceSelector';
 import { StepEditor } from './components/StepEditor';
 import { ProjectControls } from './components/ProjectControls';
 import { InstrumentRack } from './components/InstrumentRack';
-import { MixerPanel } from './components/MixerPanel';
 import {
   createDefaultProject,
   createInstrument,
@@ -28,31 +27,36 @@ import {
   importProjectPayload,
 } from './storage/projects';
 
+type ToneModule = typeof import('tone');
+
 type InstrumentNode = {
-  synth: Tone.Synth | Tone.MonoSynth | Tone.MembraneSynth;
-  gain: Tone.Gain;
-  panner: Tone.Panner;
+  synth: ToneType.Synth | ToneType.MonoSynth | ToneType.MembraneSynth;
+  gain: ToneType.Gain;
+  panner: ToneType.Panner;
 };
 
-const createInstrumentNodes = (instrument: Instrument): InstrumentNode => {
+const createInstrumentNodes = (
+  tone: ToneModule,
+  instrument: Instrument
+): InstrumentNode => {
   let synth: InstrumentNode['synth'];
 
   switch (instrument.type) {
     case 'drum':
-      synth = new Tone.MembraneSynth();
+      synth = new tone.MembraneSynth();
       break;
     case 'bass':
-      synth = new Tone.MonoSynth();
+      synth = new tone.MonoSynth();
       break;
     case 'lead':
     case 'midi':
     default:
-      synth = new Tone.Synth();
+      synth = new tone.Synth();
       break;
   }
 
-  const panner = new Tone.Panner(instrument.params.pan ?? 0);
-  const gain = new Tone.Gain(instrument.params.volume ?? 0.8);
+  const panner = new tone.Panner(instrument.params.pan ?? 0);
+  const gain = new tone.Gain(instrument.params.volume ?? 0.8);
 
   synth.connect(panner);
   panner.connect(gain);
@@ -61,21 +65,25 @@ const createInstrumentNodes = (instrument: Instrument): InstrumentNode => {
   return { synth, gain, panner };
 };
 
-const applyInstrumentParams = (instrument: Instrument, node: InstrumentNode) => {
+const applyInstrumentParams = (
+  tone: ToneModule,
+  instrument: Instrument,
+  node: InstrumentNode
+) => {
   const { volume, pan, attack, decay, sustain, release, oscillator } =
     instrument.params;
 
   node.gain.gain.value = volume;
   node.panner.pan.value = pan;
 
-  if (node.synth instanceof Tone.MembraneSynth) {
+  if (node.synth instanceof tone.MembraneSynth) {
     node.synth.set({
       envelope: { attack, decay, sustain, release },
     });
     return;
   }
 
-  if (node.synth instanceof Tone.MonoSynth) {
+  if (node.synth instanceof tone.MonoSynth) {
     node.synth.set({
       oscillator: { type: oscillator },
       envelope: { attack, decay, sustain, release },
@@ -83,7 +91,7 @@ const applyInstrumentParams = (instrument: Instrument, node: InstrumentNode) => 
     return;
   }
 
-  if (node.synth instanceof Tone.Synth) {
+  if (node.synth instanceof tone.Synth) {
     node.synth.set({
       oscillator: { type: oscillator },
       envelope: { attack, decay, sustain, release },
@@ -97,7 +105,9 @@ export const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
   const [followPlayhead, setFollowPlayhead] = useState(true);
+  const [showProjectPanel, setShowProjectPanel] = useState(false);
   const [midiDeviceId, setMidiDeviceId] = useState<string>('');
+  const [tone, setTone] = useState<ToneModule | null>(null);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     project.tracks[0]?.id ?? null
   );
@@ -110,10 +120,21 @@ export const App: React.FC = () => {
   const projectRef = useRef(project);
   const selectedTrackRef = useRef(selectedTrackId);
   const audioReadyRef = useRef(false);
+  const toneRef = useRef<ToneModule | null>(null);
 
   useEffect(() => {
     projectRef.current = project;
   }, [project]);
+
+  const loadTone = useCallback(async () => {
+    if (toneRef.current) {
+      return toneRef.current;
+    }
+    const module = await import('tone');
+    toneRef.current = module;
+    setTone(module);
+    return module;
+  }, []);
 
   useEffect(() => {
     selectedTrackRef.current = selectedTrackId;
@@ -170,15 +191,20 @@ export const App: React.FC = () => {
     const nodes = instrumentNodesRef.current;
     const activeIds = new Set(instruments.map((instrument) => instrument.id));
 
+    const toneModule = toneRef.current;
+    if (!toneModule) {
+      return;
+    }
+
     instruments.forEach((instrument) => {
       const existing = nodes.get(instrument.id);
       if (existing) {
-        applyInstrumentParams(instrument, existing);
+        applyInstrumentParams(toneModule, instrument, existing);
         return;
       }
 
-      const created = createInstrumentNodes(instrument);
-      applyInstrumentParams(instrument, created);
+      const created = createInstrumentNodes(toneModule, instrument);
+      applyInstrumentParams(toneModule, instrument, created);
       nodes.set(instrument.id, created);
     });
 
@@ -196,11 +222,12 @@ export const App: React.FC = () => {
     if (audioReadyRef.current) {
       return;
     }
-    await Tone.start();
+    const toneModule = await loadTone();
+    await toneModule.start();
     audioReadyRef.current = true;
     setIsAudioReady(true);
     ensureInstrumentNodes(projectRef.current.instruments);
-  }, [ensureInstrumentNodes]);
+  }, [ensureInstrumentNodes, loadTone]);
 
   const togglePlay = async () => {
     await ensureAudioReady();
@@ -369,6 +396,10 @@ export const App: React.FC = () => {
 
   const handleStepPreview = async (trackId: string, stepIndex: number) => {
     await ensureAudioReady();
+    const toneModule = toneRef.current;
+    if (!toneModule) {
+      return;
+    }
     const activeProject = projectRef.current;
     const track = activeProject.tracks.find((entry) => entry.id === trackId);
     if (!track) {
@@ -392,9 +423,9 @@ export const App: React.FC = () => {
     const note = step.note ?? track.defaultNote;
     const duration = step.length || '16n';
     const velocity = Math.min(Math.max(step.velocity, 0), 1);
-    const scheduledTime = Tone.now() + (step.microtiming || 0);
+    const scheduledTime = toneModule.now() + (step.microtiming || 0);
     const ratchetCount = Math.max(1, Math.round(step.ratchet || 1));
-    const durationSeconds = Tone.Time(duration).toSeconds();
+    const durationSeconds = toneModule.Time(duration).toSeconds();
     const sliceSeconds =
       ratchetCount > 1 ? durationSeconds / ratchetCount : durationSeconds;
 
@@ -426,6 +457,10 @@ export const App: React.FC = () => {
         device.onmidimessage = (message) => {
           const [status, note, velocity] = message.data || [];
           if (status === 0x90 && velocity > 0) {
+            const toneModule = toneRef.current;
+            if (!toneModule) {
+              return;
+            }
             const activeProject = projectRef.current;
             const selectedTrack = activeProject.tracks.find(
               (track) => track.id === selectedTrackRef.current
@@ -444,7 +479,7 @@ export const App: React.FC = () => {
               return;
             }
             nodes.synth.triggerAttackRelease(
-              Tone.Frequency(note, 'midi').toString(),
+              toneModule.Frequency(note, 'midi').toString(),
               '8n',
               undefined,
               velocity / 127
@@ -495,6 +530,8 @@ export const App: React.FC = () => {
     patternLength: project.patternLength,
     tempo: project.bpm,
     isPlaying,
+    isEnabled: isAudioReady,
+    tone,
     onStep: setCurrentStep,
     getInstrument,
   });
@@ -578,10 +615,19 @@ export const App: React.FC = () => {
             Sculpt drum, bass, and lead patterns with per-step feel controls.
           </p>
         </div>
-        <div className="status-pill">
-          <span>{project.patternLength} steps</span>
-          <span className="dot" />
-          <span>{project.bpm} bpm</span>
+        <div className="header-actions">
+          <div className="status-pill">
+            <span>{project.patternLength} steps</span>
+            <span className="dot" />
+            <span>{project.bpm} bpm</span>
+          </div>
+          <button
+            type="button"
+            className={`action-button ${showProjectPanel ? 'primary' : 'ghost'}`}
+            onClick={() => setShowProjectPanel((prev) => !prev)}
+          >
+            Project
+          </button>
         </div>
       </header>
 
@@ -599,17 +645,19 @@ export const App: React.FC = () => {
 
       <section className="app-main">
         <div className="stack">
-          <ProjectControls
-            projectName={project.name}
-            autosaveLabel={autosaveLabel}
-            savedProjects={savedProjects}
-            onProjectNameChange={handleProjectNameChange}
-            onNewProject={handleNewProject}
-            onSaveNow={handleSaveNow}
-            onLoadProject={handleLoadProject}
-            onExportProject={handleExportProject}
-            onImportProject={handleImportProject}
-          />
+          {showProjectPanel ? (
+            <ProjectControls
+              projectName={project.name}
+              autosaveLabel={autosaveLabel}
+              savedProjects={savedProjects}
+              onProjectNameChange={handleProjectNameChange}
+              onNewProject={handleNewProject}
+              onSaveNow={handleSaveNow}
+              onLoadProject={handleLoadProject}
+              onExportProject={handleExportProject}
+              onImportProject={handleImportProject}
+            />
+          ) : null}
           <InstrumentRack
             instruments={project.instruments}
             selectedInstrumentId={selectedInstrumentId}
@@ -617,15 +665,13 @@ export const App: React.FC = () => {
             onAddInstrument={handleInstrumentAdd}
             onRemoveInstrument={handleInstrumentRemove}
             onRenameInstrument={handleInstrumentRename}
-          />
-          <MixerPanel
-            instruments={project.instruments}
             tracks={project.tracks}
-            selectedInstrumentId={selectedInstrumentId}
             onInstrumentParamsChange={handleInstrumentParamsChange}
             onInstrumentToggle={handleInstrumentToggle}
             onTrackMuteToggle={toggleTrackMute}
           />
+        </div>
+        <div className="stack">
           <StepEditor
             track={selectedTrack}
             stepIndex={selectedStepIndex}

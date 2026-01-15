@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
-import * as Tone from 'tone';
 import type { Track } from '../models/sequence';
+import type * as ToneType from 'tone';
 
-type TrackInstrument = Tone.Synth | Tone.MonoSynth | Tone.MembraneSynth;
+type ToneModule = typeof import('tone');
+type TrackInstrument = ToneType.Synth | ToneType.MonoSynth | ToneType.MembraneSynth;
 
 interface SequencerEngineOptions {
   tracks: Track[];
   patternLength: number;
   tempo: number;
   isPlaying: boolean;
+  isEnabled: boolean;
+  tone: ToneModule | null;
   onStep: (stepIndex: number) => void;
   getInstrument: (track: Track) => TrackInstrument | null;
 }
@@ -18,6 +21,8 @@ export const useSequencerEngine = ({
   patternLength,
   tempo,
   isPlaying,
+  isEnabled,
+  tone,
   onStep,
   getInstrument,
 }: SequencerEngineOptions) => {
@@ -25,6 +30,7 @@ export const useSequencerEngine = ({
   const patternLengthRef = useRef(patternLength);
   const onStepRef = useRef(onStep);
   const getInstrumentRef = useRef(getInstrument);
+  const toneRef = useRef(tone);
   const stepRef = useRef(0);
 
   useEffect(() => {
@@ -44,18 +50,31 @@ export const useSequencerEngine = ({
   }, [getInstrument]);
 
   useEffect(() => {
-    Tone.Transport.bpm.value = tempo;
-  }, [tempo]);
+    toneRef.current = tone;
+  }, [tone]);
 
   useEffect(() => {
+    const toneModule = toneRef.current;
+    if (!isEnabled || !toneModule) {
+      return;
+    }
+    toneModule.Transport.bpm.value = tempo;
+  }, [tempo, isEnabled]);
+
+  useEffect(() => {
+    const toneModule = toneRef.current;
+    if (!isEnabled || !toneModule) {
+      return;
+    }
+
     if (!isPlaying) {
-      Tone.Transport.stop();
+      toneModule.Transport.stop();
       stepRef.current = 0;
       onStepRef.current(0);
       return;
     }
 
-    const loop = new Tone.Loop((time) => {
+    const loop = new toneModule.Loop((time) => {
       const length = patternLengthRef.current;
       const stepIndex = stepRef.current % length;
       const currentTracks = tracksRef.current;
@@ -84,7 +103,7 @@ export const useSequencerEngine = ({
         const velocity = Math.min(Math.max(step.velocity, 0), 1);
         const scheduledTime = time + (step.microtiming || 0);
         const ratchetCount = Math.max(1, Math.round(step.ratchet || 1));
-        const durationSeconds = Tone.Time(duration).toSeconds();
+        const durationSeconds = toneModule.Time(duration).toSeconds();
         const sliceSeconds =
           ratchetCount > 1 ? durationSeconds / ratchetCount : durationSeconds;
 
@@ -99,14 +118,14 @@ export const useSequencerEngine = ({
     }, '16n');
 
     loop.start(0);
-    Tone.Transport.start();
+    toneModule.Transport.start();
 
     return () => {
       loop.stop();
       loop.dispose();
-      Tone.Transport.stop();
+      toneModule.Transport.stop();
       stepRef.current = 0;
       onStepRef.current(0);
     };
-  }, [isPlaying]);
+  }, [isPlaying, isEnabled]);
 };

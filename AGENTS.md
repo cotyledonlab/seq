@@ -13,8 +13,7 @@ SEQ is a browser-based MIDI step sequencer. The current implementation now suppo
 - `src/models/sequence.ts`: project/track/step/instrument data model + helpers.
 - `src/components/StepGrid.tsx`: multi-track step grid UI.
 - `src/components/StepEditor.tsx`: per-step parameter inspector.
-- `src/components/InstrumentRack.tsx`: instrument add/remove + rename UI.
-- `src/components/MixerPanel.tsx`: per-instrument mixer controls.
+- `src/components/InstrumentRack.tsx`: instrument add/remove, rename, and mixer controls.
 - `src/components/ProjectControls.tsx`: project name, autosave, import/export UI.
 - `src/components/TransportControls.tsx`: play/stop + tempo input.
 - `src/components/MidiDeviceSelector.tsx`: Web MIDI input list.
@@ -27,10 +26,10 @@ SEQ is a browser-based MIDI step sequencer. The current implementation now suppo
 - App holds a `project` model with tracks, instruments, pattern length, and tempo alongside `currentStep` + `isPlaying`.
 - `useSequencerEngine` drives transport scheduling with refs, while UI updates render the current step highlight.
 - Multi-track grid renders per-track steps and mute toggles; pattern length control resizes steps.
-- Instrument rack manages add/remove/rename of instrument lanes and keeps tracks linked by instrument ID.
-- Mixer panel updates instrument params (volume, pan, envelopes, oscillator) and enable state.
+- Instrument rack manages add/remove/rename of instrument lanes, mix controls, and keeps tracks linked by instrument ID.
 - Step editor updates per-step velocity, probability, microtiming, ratchet, note, and length.
 - Project controls provide autosave, save snapshot, load, and JSON import/export.
+- Project panel is hidden by default and toggled from the header "Project" button.
 - MIDI device selection attaches a `onmidimessage` handler for note-on events (selected instrument).
 
 ## Commands
