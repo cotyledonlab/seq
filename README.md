@@ -2,7 +2,7 @@
 
 A modern, browser-based multi-track MIDI sequencer built with React, Tone.js, and Web MIDI API.
 
-This repo currently ships a multi-track step sequencer with a built-in lead synth, drum/bass voices, per-track mute, and variable pattern lengths. The long-term vision is a production-ready, musician-grade sequencing environment that runs in the browser (and optionally as a desktop app via Tauri) with reliable MIDI I/O, low-latency audio, rich pattern editing, and export workflows that match how modern producers and live performers actually work.
+This repo currently ships a multi-track step sequencer with an instrument rack, per-instrument lanes, mixer controls, and variable pattern lengths. The long-term vision is a production-ready, musician-grade sequencing environment that runs in the browser (and optionally as a desktop app via Tauri) with reliable MIDI I/O, low-latency audio, rich pattern editing, and export workflows that match how modern producers and live performers actually work.
 
 ## Current State (What Exists Today)
 
@@ -12,7 +12,8 @@ This repo currently ships a multi-track step sequencer with a built-in lead synt
 - Ratchet playback for stuttered step repeats.
 - Project controls with autosave, manual snapshots, and JSON import/export.
 - Transport controls (play/stop) and tempo input.
-- Dedicated instruments per track plus a lead synth editor.
+- Instrument rack with add/remove and renaming of lanes.
+- Mixer panel with per-instrument volume, pan, oscillator, and envelope controls.
 - Web MIDI device selection and MIDI note-on input playback.
 - Transport scheduling separated from UI state updates for steadier timing.
 - React + TypeScript UI, Tailwind-based styling.
@@ -124,8 +125,10 @@ npm run dev
 5. Click on the step buttons to create your patterns per track
 6. Select a step to edit velocity, probability, microtiming, and ratchet
 7. Mute tracks as needed
-8. Rename, save, or export your project from the Project panel
-9. Adjust tempo as needed
+8. Add or remove instrument lanes from the Instrument Rack
+9. Balance levels and envelopes in the Mixer panel
+10. Rename, save, or export your project from the Project panel
+11. Adjust tempo as needed
 
 ## Tech Stack
 

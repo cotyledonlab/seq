@@ -7,13 +7,15 @@ import {
 } from './sequence';
 
 describe('sequence model', () => {
-  it('creates a default project with three tracks and 16 steps', () => {
+  it('creates a default project with three tracks, instruments, and 16 steps', () => {
     const project = createDefaultProject();
 
     expect(project.patternLength).toBe(16);
     expect(project.tracks).toHaveLength(3);
+    expect(project.instruments).toHaveLength(3);
     project.tracks.forEach((track) => {
       expect(track.steps).toHaveLength(16);
+      expect(track.instrumentId).toBeTruthy();
     });
   });
 

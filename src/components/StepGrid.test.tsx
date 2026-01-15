@@ -6,6 +6,7 @@ const buildTrack = (overrides: Partial<Track>): Track => ({
   id: 'track-1',
   name: 'Drums',
   type: 'drum',
+  instrumentId: 'instrument-1',
   device: null,
   steps: Array.from({ length: 8 }, () => createStep()),
   fx: [],

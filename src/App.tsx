@@ -1,14 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as Tone from 'tone';
 import { StepGrid } from './components/StepGrid';
 import { TransportControls } from './components/TransportControls';
 import { MidiDeviceSelector } from './components/MidiDeviceSelector';
-import { Synthesizer } from './components/Synthesizer';
 import { StepEditor } from './components/StepEditor';
 import { ProjectControls } from './components/ProjectControls';
+import { InstrumentRack } from './components/InstrumentRack';
+import { MixerPanel } from './components/MixerPanel';
 import {
   createDefaultProject,
+  createInstrument,
+  createTrackForInstrument,
   resizeSteps,
+  type Instrument,
+  type InstrumentParams,
+  type InstrumentType,
   type PatternLength,
   type Track,
 } from './models/sequence';
@@ -22,10 +28,74 @@ import {
   importProjectPayload,
 } from './storage/projects';
 
+type InstrumentNode = {
+  synth: Tone.Synth | Tone.MonoSynth | Tone.MembraneSynth;
+  gain: Tone.Gain;
+  panner: Tone.Panner;
+};
+
+const createInstrumentNodes = (instrument: Instrument): InstrumentNode => {
+  let synth: InstrumentNode['synth'];
+
+  switch (instrument.type) {
+    case 'drum':
+      synth = new Tone.MembraneSynth();
+      break;
+    case 'bass':
+      synth = new Tone.MonoSynth();
+      break;
+    case 'lead':
+    case 'midi':
+    default:
+      synth = new Tone.Synth();
+      break;
+  }
+
+  const panner = new Tone.Panner(instrument.params.pan ?? 0);
+  const gain = new Tone.Gain(instrument.params.volume ?? 0.8);
+
+  synth.connect(panner);
+  panner.connect(gain);
+  gain.toDestination();
+
+  return { synth, gain, panner };
+};
+
+const applyInstrumentParams = (instrument: Instrument, node: InstrumentNode) => {
+  const { volume, pan, attack, decay, sustain, release, oscillator } =
+    instrument.params;
+
+  node.gain.gain.value = volume;
+  node.panner.pan.value = pan;
+
+  if (node.synth instanceof Tone.MembraneSynth) {
+    node.synth.set({
+      envelope: { attack, decay, sustain, release },
+    });
+    return;
+  }
+
+  if (node.synth instanceof Tone.MonoSynth) {
+    node.synth.set({
+      oscillator: { type: oscillator },
+      envelope: { attack, decay, sustain, release },
+    });
+    return;
+  }
+
+  if (node.synth instanceof Tone.Synth) {
+    node.synth.set({
+      oscillator: { type: oscillator },
+      envelope: { attack, decay, sustain, release },
+    });
+  }
+};
+
 export const App: React.FC = () => {
   const [project, setProject] = useState(() => createDefaultProject());
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isAudioReady, setIsAudioReady] = useState(false);
   const [midiDeviceId, setMidiDeviceId] = useState<string>('');
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     project.tracks[0]?.id ?? null
@@ -35,9 +105,17 @@ export const App: React.FC = () => {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [autosaveState, setAutosaveState] = useState<'idle' | 'saving'>('idle');
   const [isHydrated, setIsHydrated] = useState(false);
-  const leadSynthRef = useRef<Tone.Synth | null>(null);
-  const bassSynthRef = useRef<Tone.MonoSynth | null>(null);
-  const drumSynthRef = useRef<Tone.MembraneSynth | null>(null);
+  const instrumentNodesRef = useRef<Map<string, InstrumentNode>>(new Map());
+  const projectRef = useRef(project);
+  const selectedTrackRef = useRef(selectedTrackId);
+
+  useEffect(() => {
+    projectRef.current = project;
+  }, [project]);
+
+  useEffect(() => {
+    selectedTrackRef.current = selectedTrackId;
+  }, [selectedTrackId]);
 
   const toggleStep = (trackId: string, stepIndex: number) => {
     setProject((prev) => ({
@@ -86,16 +164,37 @@ export const App: React.FC = () => {
     setSelectedStepIndex(0);
   };
 
+  const ensureInstrumentNodes = useCallback((instruments: Instrument[]) => {
+    const nodes = instrumentNodesRef.current;
+    const activeIds = new Set(instruments.map((instrument) => instrument.id));
+
+    instruments.forEach((instrument) => {
+      const existing = nodes.get(instrument.id);
+      if (existing) {
+        applyInstrumentParams(instrument, existing);
+        return;
+      }
+
+      const created = createInstrumentNodes(instrument);
+      applyInstrumentParams(instrument, created);
+      nodes.set(instrument.id, created);
+    });
+
+    nodes.forEach((node, id) => {
+      if (!activeIds.has(id)) {
+        node.synth.dispose();
+        node.gain.dispose();
+        node.panner.dispose();
+        nodes.delete(id);
+      }
+    });
+  }, []);
+
   const togglePlay = async () => {
-    await Tone.start();
-    if (!leadSynthRef.current) {
-      leadSynthRef.current = new Tone.Synth().toDestination();
-    }
-    if (!bassSynthRef.current) {
-      bassSynthRef.current = new Tone.MonoSynth().toDestination();
-    }
-    if (!drumSynthRef.current) {
-      drumSynthRef.current = new Tone.MembraneSynth().toDestination();
+    if (!isAudioReady) {
+      await Tone.start();
+      setIsAudioReady(true);
+      ensureInstrumentNodes(project.instruments);
     }
     setIsPlaying((prev) => !prev);
   };
@@ -142,9 +241,98 @@ export const App: React.FC = () => {
     }
   };
 
+  const buildInstrumentName = (
+    type: InstrumentType,
+    instruments: Instrument[]
+  ) => {
+    const label =
+      type === 'drum'
+        ? 'Drums'
+        : type === 'bass'
+          ? 'Bass'
+          : type === 'midi'
+            ? 'Midi'
+            : 'Lead';
+    const count = instruments.filter((instrument) => instrument.type === type).length;
+    return count === 0 ? label : `${label} ${count + 1}`;
+  };
+
+  const handleInstrumentAdd = (type: InstrumentType) => {
+    const instrument = createInstrument({
+      type,
+      name: buildInstrumentName(type, project.instruments),
+    });
+    const track = createTrackForInstrument(project.patternLength, instrument);
+
+    setProject((prev) => ({
+      ...prev,
+      instruments: [...prev.instruments, instrument],
+      tracks: [...prev.tracks, track],
+    }));
+    setSelectedTrackId(track.id);
+    setSelectedStepIndex(0);
+  };
+
+  const handleInstrumentRemove = (instrumentId: string) => {
+    setProject((prev) => ({
+      ...prev,
+      instruments: prev.instruments.filter(
+        (instrument) => instrument.id !== instrumentId
+      ),
+      tracks: prev.tracks.filter((track) => track.instrumentId !== instrumentId),
+    }));
+  };
+
+  const handleInstrumentRename = (instrumentId: string, name: string) => {
+    setProject((prev) => ({
+      ...prev,
+      instruments: prev.instruments.map((instrument) =>
+        instrument.id === instrumentId ? { ...instrument, name } : instrument
+      ),
+      tracks: prev.tracks.map((track) =>
+        track.instrumentId === instrumentId ? { ...track, name } : track
+      ),
+    }));
+  };
+
+  const handleInstrumentParamsChange = (
+    instrumentId: string,
+    updates: Partial<InstrumentParams>
+  ) => {
+    setProject((prev) => ({
+      ...prev,
+      instruments: prev.instruments.map((instrument) =>
+        instrument.id === instrumentId
+          ? { ...instrument, params: { ...instrument.params, ...updates } }
+          : instrument
+      ),
+    }));
+  };
+
+  const handleInstrumentToggle = (instrumentId: string) => {
+    setProject((prev) => ({
+      ...prev,
+      instruments: prev.instruments.map((instrument) =>
+        instrument.id === instrumentId
+          ? { ...instrument, enabled: !instrument.enabled }
+          : instrument
+      ),
+    }));
+  };
+
   const handleStepSelect = (trackId: string, stepIndex: number) => {
     setSelectedTrackId(trackId);
     setSelectedStepIndex(stepIndex);
+  };
+
+  const handleInstrumentSelect = (instrumentId: string) => {
+    const track = project.tracks.find(
+      (candidate) => candidate.instrumentId === instrumentId
+    );
+    if (track) {
+      setSelectedTrackId(track.id);
+      setSelectedStepIndex(0);
+    }
   };
 
   const handleStepChange = (
@@ -193,10 +381,24 @@ export const App: React.FC = () => {
         device.onmidimessage = (message) => {
           const [status, note, velocity] = message.data || [];
           if (status === 0x90 && velocity > 0) {
-            if (!leadSynthRef.current) {
+            const activeProject = projectRef.current;
+            const selectedTrack = activeProject.tracks.find(
+              (track) => track.id === selectedTrackRef.current
+            );
+            if (!selectedTrack) {
               return;
             }
-            leadSynthRef.current.triggerAttackRelease(
+            const instrument = activeProject.instruments.find(
+              (entry) => entry.id === selectedTrack.instrumentId
+            );
+            if (!instrument || !instrument.enabled) {
+              return;
+            }
+            const nodes = instrumentNodesRef.current.get(instrument.id);
+            if (!nodes) {
+              return;
+            }
+            nodes.synth.triggerAttackRelease(
               Tone.Frequency(note, 'midi').toString(),
               '8n',
               undefined,
@@ -219,19 +421,28 @@ export const App: React.FC = () => {
     };
   }, [midiDeviceId]);
 
+  useEffect(() => {
+    if (!isAudioReady) {
+      return;
+    }
+    ensureInstrumentNodes(project.instruments);
+  }, [project.instruments, isAudioReady, ensureInstrumentNodes]);
+
+  const instrumentById = useMemo(
+    () => new Map(project.instruments.map((instrument) => [instrument.id, instrument])),
+    [project.instruments]
+  );
+
   const getInstrument = useCallback(
     (track: Track) => {
-      switch (track.type) {
-        case 'drum':
-          return drumSynthRef.current;
-        case 'bass':
-          return bassSynthRef.current;
-        case 'lead':
-        default:
-          return leadSynthRef.current;
+      const instrument = instrumentById.get(track.instrumentId);
+      if (!instrument || !instrument.enabled) {
+        return null;
       }
+      const nodes = instrumentNodesRef.current.get(instrument.id);
+      return nodes?.synth ?? null;
     },
-    []
+    [instrumentById]
   );
 
   useSequencerEngine({
@@ -296,6 +507,8 @@ export const App: React.FC = () => {
 
   const selectedTrack =
     project.tracks.find((track) => track.id === selectedTrackId) ?? null;
+  const selectedInstrumentId =
+    selectedTrack?.instrumentId ?? project.instruments[0]?.id ?? null;
 
   const autosaveLabel = lastSavedAt
     ? `${autosaveState === 'saving' ? 'Saving' : 'Autosaved'} • ${lastSavedAt.toLocaleTimeString()}`
@@ -345,9 +558,21 @@ export const App: React.FC = () => {
             onExportProject={handleExportProject}
             onImportProject={handleImportProject}
           />
-          <Synthesizer 
-            synth={leadSynthRef.current}
-            receiveMidiInput={!!midiDeviceId}
+          <InstrumentRack
+            instruments={project.instruments}
+            selectedInstrumentId={selectedInstrumentId}
+            onSelectInstrument={handleInstrumentSelect}
+            onAddInstrument={handleInstrumentAdd}
+            onRemoveInstrument={handleInstrumentRemove}
+            onRenameInstrument={handleInstrumentRename}
+          />
+          <MixerPanel
+            instruments={project.instruments}
+            tracks={project.tracks}
+            selectedInstrumentId={selectedInstrumentId}
+            onInstrumentParamsChange={handleInstrumentParamsChange}
+            onInstrumentToggle={handleInstrumentToggle}
+            onTrackMuteToggle={toggleTrackMute}
           />
           <StepEditor
             track={selectedTrack}
