@@ -1,6 +1,6 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&color=0:020617,100:0f172a&height=200&section=header&text=SEQ&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Browser-based%20MIDI%20Sequencer&descSize=20&descAlignY=58&descAlign=50">
-  <source media="(prefers-color-scheme: light)" srcset="https://capsule-render.vercel.app/api?type=waving&color=0:020617,100:0f172a&height=200&section=header&text=SEQ&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Browser-based%20MIDI%20Sequencer&descSize=20&descAlignY=58&descAlign=50">
+  <source media="(prefers-color-scheme: light)" srcset="https://capsule-render.vercel.app/api?type=waving&color=0:e5f2ff,100:bfdbfe&height=200&section=header&text=SEQ&fontSize=70&fontColor=020617&animation=fadeIn&fontAlignY=38&desc=Browser-based%20MIDI%20Sequencer&descSize=20&descAlignY=58&descAlign=50">
   <img alt="SEQ Header" src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,100:0f172a&height=200&section=header&text=SEQ&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Browser-based%20MIDI%20Sequencer&descSize=20&descAlignY=58&descAlign=50" width="100%">
 </picture>
 
@@ -75,7 +75,6 @@ Add screenshots like:
 ### 💾 Project Management
 - Autosave and manual snapshots
 - JSON import/export
-- React + TypeScript UI with Tailwind styling
 
 </td>
 </tr>
@@ -238,7 +237,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,100:020617&height=100&section=footer">
-  <source media="(prefers-color-scheme: light)" srcset="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,100:020617&height=100&section=footer">
+  <source media="(prefers-color-scheme: light)" srcset="https://capsule-render.vercel.app/api?type=waving&color=0:e5e7eb,100:cbd5e1&height=100&section=footer">
   <img alt="Footer" src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,100:020617&height=100&section=footer" width="100%">
 </picture>
 
