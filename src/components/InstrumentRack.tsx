@@ -106,10 +106,11 @@ export const InstrumentRack: React.FC<InstrumentRackProps> = ({
             <div className="rack-actions">
               <button
                 type="button"
-                className={`action-button ${instrument.enabled ? 'primary' : 'ghost'}`}
+                className={`action-button power-toggle ${instrument.enabled ? 'power-on' : 'power-off'}`}
                 onClick={() => onInstrumentToggle(instrument.id)}
+                title="Power on/off - disables all sound from this instrument"
               >
-                {instrument.enabled ? 'Enabled' : 'Muted'}
+                {instrument.enabled ? 'On' : 'Off'}
               </button>
               <button
                 type="button"
@@ -117,6 +118,7 @@ export const InstrumentRack: React.FC<InstrumentRackProps> = ({
                   selectedInstrumentId === instrument.id ? 'is-active' : ''
                 }`}
                 onClick={() => onSelectInstrument(instrument.id)}
+                title="Select this instrument's track for editing"
               >
                 Focus
               </button>
@@ -124,14 +126,20 @@ export const InstrumentRack: React.FC<InstrumentRackProps> = ({
                 type="button"
                 className="action-button ghost"
                 onClick={() => toggleExpanded(instrument.id)}
+                title={isExpanded ? 'Hide mixer controls' : 'Show volume, pan, and envelope controls'}
               >
                 {isExpanded ? 'Hide Mix' : 'Mix'}
               </button>
               <button
                 type="button"
-                className="action-button ghost"
-                onClick={() => onRemoveInstrument(instrument.id)}
+                className="action-button ghost danger-action"
+                onClick={() => {
+                  if (window.confirm(`Delete "${instrument.name}"? This will remove all its steps.`)) {
+                    onRemoveInstrument(instrument.id);
+                  }
+                }}
                 disabled={instruments.length <= 1}
+                title="Remove this instrument and its track"
               >
                 Remove
               </button>
@@ -225,10 +233,11 @@ export const InstrumentRack: React.FC<InstrumentRackProps> = ({
                   <div className="rack-mixer-actions">
                     <button
                       type="button"
-                      className="action-button ghost"
+                      className={`action-button track-mute ${isMuted ? 'track-muted' : ''}`}
                       onClick={() => onTrackMuteToggle(track.id)}
+                      title="Mute track - silences playback but keeps pattern visible"
                     >
-                      {isMuted ? 'Muted' : 'Mute'}
+                      {isMuted ? 'Track Muted' : 'Mute Track'}
                     </button>
                   </div>
                 ) : null}

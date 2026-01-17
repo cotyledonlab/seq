@@ -81,6 +81,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({
             className={`action-button ${followPlayhead ? 'primary' : 'ghost'}`}
             aria-pressed={followPlayhead}
             onClick={() => onFollowPlayheadChange(!followPlayhead)}
+            title="Follow playhead - auto-select the currently playing step"
           >
             Follow
           </button>
@@ -105,6 +106,19 @@ export const StepEditor: React.FC<StepEditorProps> = ({
         </div>
       </div>
 
+      <div className="step-overview">
+        {track.steps.slice(0, patternLength).map((s, idx) => (
+          <button
+            key={idx}
+            type="button"
+            className={`step-overview-btn ${s.active ? 'active' : ''} ${idx === stepIndex ? 'selected' : ''}`}
+            onClick={() => onStepSelect?.(track.id, idx)}
+            aria-label={`Step ${idx + 1}${s.active ? ' (active)' : ''}`}
+            aria-current={idx === stepIndex ? 'step' : undefined}
+          />
+        ))}
+      </div>
+
       <div className="button-row">
         <button
           type="button"
@@ -120,6 +134,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({
             type="button"
             className="action-button ghost"
             onClick={() => onStepPreview(track.id, stepIndex)}
+            title="Play this step once to hear it"
           >
             Preview
           </button>
@@ -161,7 +176,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({
           </select>
         </label>
 
-        <label className="control">
+        <label className="control" title="How loud this step plays (0-100%)">
           <span>Velocity</span>
           <input
             type="range"
@@ -179,7 +194,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({
           <strong>{Math.round(step.velocity * 100)}%</strong>
         </label>
 
-        <label className="control">
+        <label className="control" title="Chance this step plays (100% = always, 0% = never)">
           <span>Probability</span>
           <input
             type="range"
@@ -197,7 +212,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({
           <strong>{Math.round(step.probability * 100)}%</strong>
         </label>
 
-        <label className="control">
+        <label className="control" title="Shift timing for groove feel (-50ms early to +50ms late)">
           <span>Microtiming</span>
           <input
             type="range"
@@ -215,7 +230,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({
           <strong>{microtimingMs}ms</strong>
         </label>
 
-        <label className="control">
+        <label className="control" title="Repeat the note X times within this step (1x = normal, 4x = rapid fire)">
           <span>Ratchet</span>
           <select
             value={step.ratchet}

@@ -6,6 +6,7 @@ import { MidiDeviceSelector } from './components/MidiDeviceSelector';
 import { StepEditor } from './components/StepEditor';
 import { ProjectControls } from './components/ProjectControls';
 import { InstrumentRack } from './components/InstrumentRack';
+import { ViewTabs, type ViewType } from './components/ViewTabs';
 import {
   createDefaultProject,
   createInstrument,
@@ -112,6 +113,7 @@ export const App: React.FC = () => {
     project.tracks[0]?.id ?? null
   );
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(0);
+  const [activeView, setActiveView] = useState<ViewType>('grid');
   const [savedProjects, setSavedProjects] = useState<StoredProjectSummary[]>([]);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [autosaveState, setAutosaveState] = useState<'idle' | 'saving'>('idle');
@@ -594,6 +596,67 @@ export const App: React.FC = () => {
     }
   }, [project.patternLength, selectedStepIndex]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignore if user is typing in an input field
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        return;
+      }
+
+      switch (event.code) {
+        case 'Space':
+          event.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          if (selectedTrackId && selectedStepIndex !== null) {
+            const maxSteps = project.patternLength;
+            const nextIndex = (selectedStepIndex - 1 + maxSteps) % maxSteps;
+            setSelectedStepIndex(nextIndex);
+          }
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          if (selectedTrackId && selectedStepIndex !== null) {
+            const maxSteps = project.patternLength;
+            const nextIndex = (selectedStepIndex + 1) % maxSteps;
+            setSelectedStepIndex(nextIndex);
+          }
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          if (selectedTrackId) {
+            const currentTrackIndex = project.tracks.findIndex(t => t.id === selectedTrackId);
+            if (currentTrackIndex > 0) {
+              setSelectedTrackId(project.tracks[currentTrackIndex - 1].id);
+            }
+          }
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          if (selectedTrackId) {
+            const currentTrackIndex = project.tracks.findIndex(t => t.id === selectedTrackId);
+            if (currentTrackIndex < project.tracks.length - 1) {
+              setSelectedTrackId(project.tracks[currentTrackIndex + 1].id);
+            }
+          }
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (selectedTrackId && selectedStepIndex !== null) {
+            toggleStep(selectedTrackId, selectedStepIndex);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedTrackId, selectedStepIndex, project.patternLength, project.tracks]);
+
   const selectedTrack =
     project.tracks.find((track) => track.id === selectedTrackId) ?? null;
   const selectedInstrumentId =
@@ -658,6 +721,7 @@ export const App: React.FC = () => {
         <MidiDeviceSelector onDeviceSelect={handleMidiDeviceSelect} />
         <TransportControls
           isPlaying={isPlaying}
+          isAudioReady={isAudioReady}
           onPlayToggle={togglePlay}
           tempo={project.bpm}
           onTempoChange={handleTempoChange}
@@ -666,45 +730,62 @@ export const App: React.FC = () => {
         />
       </section>
 
-      <section className="app-main">
-        <div className="stack">
-          <InstrumentRack
-            instruments={project.instruments}
-            selectedInstrumentId={selectedInstrumentId}
-            onSelectInstrument={handleInstrumentSelect}
-            onAddInstrument={handleInstrumentAdd}
-            onRemoveInstrument={handleInstrumentRemove}
-            onRenameInstrument={handleInstrumentRename}
-            tracks={project.tracks}
-            onInstrumentParamsChange={handleInstrumentParamsChange}
-            onInstrumentToggle={handleInstrumentToggle}
-            onTrackMuteToggle={toggleTrackMute}
-          />
-        </div>
-        <div className="stack">
-          <StepEditor
-            track={selectedTrack}
-            stepIndex={selectedStepIndex}
-            patternLength={project.patternLength}
-            followPlayhead={followPlayhead}
-            onStepChange={handleStepChange}
-            onStepSelect={handleStepSelect}
-            onStepPreview={handleStepPreview}
-            onFollowPlayheadChange={setFollowPlayhead}
-          />
-        </div>
-        <div className="grid-panel">
-          <StepGrid
-            tracks={project.tracks}
-            currentStep={currentStep}
-            patternLength={project.patternLength}
-            onStepToggle={toggleStep}
-            onTrackMuteToggle={toggleTrackMute}
-            selectedTrackId={selectedTrackId}
-            selectedStepIndex={selectedStepIndex}
-            onStepSelect={handleStepSelect}
-          />
-        </div>
+      <section className="app-main app-main--tabbed">
+        <ViewTabs
+          activeView={activeView}
+          onViewChange={setActiveView}
+          patternLength={project.patternLength}
+          selectedTrackName={selectedTrack?.name}
+          selectedStepIndex={selectedStepIndex}
+          instrumentCount={project.instruments.length}
+        />
+
+        {activeView === 'grid' && (
+          <div className="tab-panel" id="panel-grid" role="tabpanel">
+            <StepGrid
+              tracks={project.tracks}
+              currentStep={currentStep}
+              patternLength={project.patternLength}
+              onStepToggle={toggleStep}
+              onTrackMuteToggle={toggleTrackMute}
+              selectedTrackId={selectedTrackId}
+              selectedStepIndex={selectedStepIndex}
+              onStepSelect={handleStepSelect}
+            />
+          </div>
+        )}
+
+        {activeView === 'editor' && (
+          <div className="tab-panel" id="panel-editor" role="tabpanel">
+            <StepEditor
+              track={selectedTrack}
+              stepIndex={selectedStepIndex}
+              patternLength={project.patternLength}
+              followPlayhead={followPlayhead}
+              onStepChange={handleStepChange}
+              onStepSelect={handleStepSelect}
+              onStepPreview={handleStepPreview}
+              onFollowPlayheadChange={setFollowPlayhead}
+            />
+          </div>
+        )}
+
+        {activeView === 'mix' && (
+          <div className="tab-panel" id="panel-mix" role="tabpanel">
+            <InstrumentRack
+              instruments={project.instruments}
+              selectedInstrumentId={selectedInstrumentId}
+              onSelectInstrument={handleInstrumentSelect}
+              onAddInstrument={handleInstrumentAdd}
+              onRemoveInstrument={handleInstrumentRemove}
+              onRenameInstrument={handleInstrumentRename}
+              tracks={project.tracks}
+              onInstrumentParamsChange={handleInstrumentParamsChange}
+              onInstrumentToggle={handleInstrumentToggle}
+              onTrackMuteToggle={toggleTrackMute}
+            />
+          </div>
+        )}
       </section>
     </div>
   );

@@ -3,6 +3,7 @@ import { PATTERN_LENGTHS, type PatternLength } from '../models/sequence';
 
 interface TransportControlsProps {
   isPlaying: boolean;
+  isAudioReady: boolean;
   onPlayToggle: () => void;
   tempo: number;
   onTempoChange: (tempo: number) => void;
@@ -12,20 +13,35 @@ interface TransportControlsProps {
 
 export const TransportControls: React.FC<TransportControlsProps> = ({
   isPlaying,
+  isAudioReady,
   onPlayToggle,
   tempo,
   onTempoChange,
   patternLength,
   onPatternLengthChange,
 }) => {
+  const [isInitializing, setIsInitializing] = React.useState(false);
+
+  const handlePlayClick = async () => {
+    if (!isAudioReady && !isPlaying) {
+      setIsInitializing(true);
+    }
+    await onPlayToggle();
+    setIsInitializing(false);
+  };
+
+  const buttonLabel = isInitializing ? 'Starting...' : isPlaying ? 'Stop' : 'Play';
+
   return (
     <div className="panel transport">
       <button
-        className={`transport-button ${isPlaying ? 'is-playing' : ''}`}
-        onClick={onPlayToggle}
+        className={`transport-button ${isPlaying ? 'is-playing' : ''} ${isInitializing ? 'is-initializing' : ''}`}
+        onClick={handlePlayClick}
         type="button"
+        disabled={isInitializing}
+        title="Space bar to toggle play/stop"
       >
-        {isPlaying ? 'Stop' : 'Play'}
+        {buttonLabel}
       </button>
       <div className="transport-fields">
         <label className="control">
@@ -47,10 +63,19 @@ export const TransportControls: React.FC<TransportControlsProps> = ({
           <span>Steps</span>
           <select
             value={patternLength}
-            onChange={(e) =>
-              onPatternLengthChange(Number(e.target.value) as PatternLength)
-            }
+            onChange={(e) => {
+              const newLength = Number(e.target.value) as PatternLength;
+              if (newLength !== patternLength) {
+                if (window.confirm(`Change to ${newLength} steps? Playback position will reset.`)) {
+                  onPatternLengthChange(newLength);
+                } else {
+                  // Reset the select to current value
+                  e.target.value = String(patternLength);
+                }
+              }
+            }}
             aria-label="Pattern length"
+            title="Change pattern length - affects all tracks"
           >
             {PATTERN_LENGTHS.map((length) => (
               <option key={length} value={length}>

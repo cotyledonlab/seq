@@ -59,7 +59,10 @@ export const ProjectControls: React.FC<ProjectControlsProps> = ({
             value=""
             onChange={(event) => {
               if (event.target.value) {
-                onLoadProject(event.target.value);
+                const selectedProject = savedProjects.find(p => p.id === event.target.value);
+                if (window.confirm(`Load "${selectedProject?.name || 'project'}"? Any unsaved changes will be lost.`)) {
+                  onLoadProject(event.target.value);
+                }
               }
             }}
           >
@@ -74,7 +77,15 @@ export const ProjectControls: React.FC<ProjectControlsProps> = ({
       </div>
 
       <div className="button-row">
-        <button type="button" className="action-button" onClick={onNewProject}>
+        <button
+          type="button"
+          className="action-button"
+          onClick={() => {
+            if (window.confirm('Start new project? Any unsaved changes will be lost.')) {
+              onNewProject();
+            }
+          }}
+        >
           New project
         </button>
         <button

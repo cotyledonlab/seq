@@ -40,7 +40,7 @@ describe('StepGrid', () => {
     expect(screen.getByTestId('sequencer-step-track-1-0')).toBeInTheDocument();
   });
 
-  it('calls handlers when steps and mute toggles are clicked', () => {
+  it('calls onStepSelect on single click and onStepToggle on double click', () => {
     const onStepToggle = jest.fn();
     const onTrackMuteToggle = jest.fn();
     const onStepSelect = jest.fn();
@@ -59,11 +59,17 @@ describe('StepGrid', () => {
       />
     );
 
+    // Single click selects the step
     fireEvent.click(screen.getByTestId('sequencer-step-track-1-0'));
-    fireEvent.click(screen.getByRole('button', { name: 'Mute' }));
-
-    expect(onStepToggle).toHaveBeenCalledWith('track-1', 0);
     expect(onStepSelect).toHaveBeenCalledWith('track-1', 0);
+    expect(onStepToggle).not.toHaveBeenCalled();
+
+    // Double click toggles the step
+    fireEvent.doubleClick(screen.getByTestId('sequencer-step-track-1-0'));
+    expect(onStepToggle).toHaveBeenCalledWith('track-1', 0);
+
+    // Mute button still works
+    fireEvent.click(screen.getByRole('button', { name: 'Mute' }));
     expect(onTrackMuteToggle).toHaveBeenCalledWith('track-1');
   });
 });

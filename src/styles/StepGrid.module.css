@@ -13,7 +13,7 @@
 .headerRow,
 .trackRow {
   display: grid;
-  grid-template-columns: 170px 1fr;
+  grid-template-columns: 130px 1fr;
   gap: 12px;
   align-items: center;
   border-radius: 12px;
@@ -72,15 +72,14 @@
 }
 
 .stepRowWrapper {
-  overflow-x: auto;
-  padding-bottom: 4px;
+  min-width: 0;
 }
 
 .stepHeader,
 .stepRow {
   display: grid;
-  grid-template-columns: repeat(var(--steps), minmax(28px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(var(--steps), 1fr);
+  gap: 6px;
 }
 
 .stepLabel {
@@ -120,4 +119,88 @@
 
 .selected {
   box-shadow: 0 0 0 2px rgba(26, 183, 166, 0.9), 0 0 12px rgba(26, 183, 166, 0.4);
+}
+
+/* Probability indicator - shows when step is active but probability < 100% */
+.lowProbability {
+  position: relative;
+}
+
+.lowProbability::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--probability, 1) * 80%);
+  height: 3px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+}
+
+.gridHint {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gridHint p {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .headerRow,
+  .trackRow {
+    grid-template-columns: 100px 1fr;
+    gap: 8px;
+  }
+
+  .stepHeader,
+  .stepRow {
+    gap: 4px;
+  }
+
+  .stepButton {
+    border-radius: 6px;
+  }
+
+  .trackLabel {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .muteButton {
+    padding: 4px 8px;
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerRow,
+  .trackRow {
+    grid-template-columns: 80px 1fr;
+    gap: 6px;
+  }
+
+  .stepHeader,
+  .stepRow {
+    gap: 3px;
+  }
+
+  .stepButton {
+    border-radius: 4px;
+  }
+
+  .trackName {
+    font-size: 0.75rem;
+  }
+
+  .trackType {
+    font-size: 0.5rem;
+  }
 }

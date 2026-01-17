@@ -23,6 +23,10 @@ export const StepGrid: React.FC<StepGridProps> = ({
   selectedStepIndex,
   onStepSelect,
 }) => {
+  const hasAnyActiveSteps = tracks.some(track =>
+    track.steps.slice(0, patternLength).some(step => step.active)
+  );
+
   return (
     <div className={styles.gridContainer}>
       <div className={styles.headerRow}>
@@ -77,19 +81,19 @@ export const StepGrid: React.FC<StepGridProps> = ({
               {track.steps.slice(0, patternLength).map((step, index) => (
                 <button
                   key={`${track.id}-${index}`}
-                  title={`${track.name} Step ${index + 1}`}
-                  className={`${styles.stepButton} 
+                  title={`${track.name} Step ${index + 1}${step.active ? ' (active)' : ''} - Click to select, double-click to toggle`}
+                  className={`${styles.stepButton}
                     ${step.active ? styles.active : styles.inactive}
                     ${currentStep === index ? styles.current : ''}
                     ${
                       selectedTrackId === track.id && selectedStepIndex === index
                         ? styles.selected
                         : ''
-                    }`}
-                  onClick={() => {
-                    onStepSelect(track.id, index);
-                    onStepToggle(track.id, index);
-                  }}
+                    }
+                    ${step.active && step.probability < 1 ? styles.lowProbability : ''}`}
+                  style={step.active && step.probability < 1 ? { '--probability': step.probability } as React.CSSProperties : undefined}
+                  onClick={() => onStepSelect(track.id, index)}
+                  onDoubleClick={() => onStepToggle(track.id, index)}
                   data-testid={`sequencer-step-${track.id}-${index}`}
                   aria-pressed={step.active}
                 />
@@ -98,6 +102,14 @@ export const StepGrid: React.FC<StepGridProps> = ({
           </div>
         </div>
       ))}
+
+      <div className={styles.gridHint}>
+        {!hasAnyActiveSteps ? (
+          <p>Double-click steps to build your pattern. Use arrow keys to navigate, Enter to toggle.</p>
+        ) : (
+          <p>Click to select · Double-click to toggle · Arrow keys to navigate · Space to play</p>
+        )}
+      </div>
     </div>
   );
 };

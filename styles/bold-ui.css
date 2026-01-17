@@ -276,6 +276,42 @@ p {
   box-shadow: none;
 }
 
+/* Power toggle for instrument on/off - visually distinct from track mute */
+.action-button.power-toggle {
+  min-width: 50px;
+  font-weight: 700;
+}
+
+.action-button.power-on {
+  background: var(--accent-2);
+  color: #1a1a1a;
+  box-shadow: 0 8px 16px rgba(26, 183, 166, 0.25);
+}
+
+.action-button.power-off {
+  background: rgba(60, 60, 60, 0.8);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Track mute button - red tint when muted */
+.action-button.track-mute {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.action-button.track-muted {
+  background: var(--accent-3);
+  color: #1a1a1a;
+  border-color: var(--accent-3);
+}
+
+/* Danger action styling for destructive buttons */
+.action-button.danger-action:hover:not(:disabled) {
+  border-color: var(--accent-3);
+  color: var(--accent-3);
+}
+
 .file-input {
   display: none;
 }
@@ -374,6 +410,16 @@ p {
   box-shadow: 0 12px 24px rgba(239, 71, 111, 0.3);
 }
 
+.transport-button.is-initializing {
+  background: var(--panel-2);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 .transport-button:hover {
   transform: translateY(-2px);
 }
@@ -383,6 +429,104 @@ p {
   grid-template-columns: minmax(220px, 320px) minmax(280px, 380px) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
+}
+
+.app-main--tabbed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--panel);
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow);
+}
+
+.view-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+}
+
+.view-tab.active {
+  background: var(--accent-1);
+  color: #1a1a1a;
+  box-shadow: 0 8px 20px rgba(255, 122, 0, 0.25);
+}
+
+.view-tab-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.view-tab-badge {
+  font-size: 0.65rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.view-tab.active .view-tab-badge {
+  opacity: 0.7;
+}
+
+.tab-panel {
+  animation: fadeUp 0.3s ease both;
+}
+
+.step-overview {
+  display: flex;
+  gap: 6px;
+  padding: 12px 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+
+.step-overview-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.step-overview-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.step-overview-btn.active {
+  background: linear-gradient(135deg, rgba(255, 122, 0, 0.7), rgba(255, 174, 84, 0.7));
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.step-overview-btn.selected {
+  box-shadow: 0 0 0 2px rgba(26, 183, 166, 0.9), 0 0 8px rgba(26, 183, 166, 0.3);
 }
 
 .stack {
@@ -542,5 +686,54 @@ p {
   .status-pill {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .view-tabs {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .view-tab {
+    padding: 10px 12px;
+  }
+
+  .view-tab-label {
+    font-size: 0.7rem;
+  }
+
+  .view-tab-badge {
+    font-size: 0.55rem;
+  }
+
+  .step-overview {
+    gap: 4px;
+  }
+
+  .step-overview-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-tab {
+    padding: 8px 6px;
+  }
+
+  .view-tab-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+  }
+
+  .view-tab-badge {
+    display: none;
+  }
+
+  .step-overview-btn {
+    width: 20px;
+    height: 20px;
   }
 }
